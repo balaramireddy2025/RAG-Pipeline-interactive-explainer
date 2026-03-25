@@ -1488,75 +1488,22 @@ input[type=range]::-webkit-slider-thumb {
     </div>
   </div>
 
-  <div class="naive-rag">
-    <div class="naive-rag-title">The Naive RAG Pipeline</div>
-    <div class="naive-rag-sub">Every RAG system follows this flow. Today, we build each step from scratch.</div>
-
-    <div class="naive-rag-steps">
-      <div class="naive-rag-steprow">
-        <div class="naive-step-card done" data-index="0" data-page="loading" onclick="naiveStepClick(this)">
-          <div class="naive-step-icon">📄</div>
-          <div class="naive-step-label">Load Documents</div>
-        </div>
-        <div class="naive-step-card done" data-index="1" data-page="preprocessing" onclick="naiveStepClick(this)">
-          <div class="naive-step-icon">🧽</div>
-          <div class="naive-step-label">Clean Text</div>
-        </div>
-        <div class="naive-step-card done" data-index="2" data-page="chunking" onclick="naiveStepClick(this)">
-          <div class="naive-step-icon">✂️</div>
-          <div class="naive-step-label">Chunk Text</div>
-        </div>
-        <div class="naive-step-card done" data-index="3" data-page="embeddings" onclick="naiveStepClick(this)">
-          <div class="naive-step-icon">🔢</div>
-          <div class="naive-step-label">Embed Chunks</div>
-        </div>
-        <div class="naive-step-card current" data-index="4" data-page="vectorstore" onclick="naiveStepClick(this)">
-          <div class="naive-step-icon">🗄</div>
-          <div class="naive-step-label">Vector DB</div>
-        </div>
-        <div class="naive-step-card" data-index="5" data-page="retrieval" onclick="naiveStepClick(this)">
-          <div class="naive-step-icon">🔍</div>
-          <div class="naive-step-label">Retrieve</div>
-        </div>
-        <div class="naive-step-card" data-index="6" data-page="generation" onclick="naiveStepClick(this)">
-          <div class="naive-step-icon">📝</div>
-          <div class="naive-step-label">Build Prompt</div>
-        </div>
-        <div class="naive-step-card" data-index="7" data-page="generation" onclick="naiveStepClick(this)">
-          <div class="naive-step-icon">🤖</div>
-          <div class="naive-step-label">LLM</div>
-        </div>
-        <div class="naive-step-card" data-index="8" data-page="generation" onclick="naiveStepClick(this)">
-          <div class="naive-step-icon">✅</div>
-          <div class="naive-step-label">Answer</div>
-        </div>
-      </div>
-      <div class="naive-rag-line"></div>
-      <div class="naive-rag-hint">Click each step to jump + mark progress</div>
-    </div>
-  </div>
-
-  <div class="page-body" style="padding-top:1rem">
-    <div class="section-title" style="font-size:1.3rem;margin-bottom:0.8rem">Use Cases</div>
-    <div class="info-box">
-      <span class="ib-icon">💡</span>
-      <div class="ib-text">RAG is used anywhere you need answers grounded in your own documents. The pipeline below helps your agent retrieve the right evidence, then generate a traceable response.</div>
-    </div>
+  <div class="page-body" style="padding-top:0.5rem">
     <div class="cards-grid">
       <div class="card">
-        <div class="card-icon">📄</div>
-        <h4>Use Case: PDF Q&amp;A</h4>
-        <p>Upload a 200-page manual and ask questions. The system retrieves the exact chunks and answers with page-based context.</p>
+        <div class="card-icon">🗺</div>
+        <h4>9 Interactive Steps</h4>
+        <p>Navigate each stage of the RAG pipeline — from raw document loading all the way to grounded LLM generation. Every step has live demos and working code.</p>
       </div>
       <div class="card">
-        <div class="card-icon">🧠</div>
-        <h4>Use Case: Knowledge Base</h4>
-        <p>Build an internal chatbot that answers from policies, handbooks, and runbooks—optionally filtered by department or document type.</p>
+        <div class="card-icon">⚡</div>
+        <h4>No Framework Magic</h4>
+        <p>Pure Python examples you can copy directly. Understand what's happening under the hood before adding LangChain or LlamaIndex on top.</p>
       </div>
       <div class="card">
-        <div class="card-icon">💬</div>
-        <h4>Use Case: Support Bot</h4>
-        <p>When customers ask about features or troubleshooting, retrieve relevant docs and generate a grounded, reliable response.</p>
+        <div class="card-icon">🏢</div>
+        <h4>Built for Teams</h4>
+        <p>Every stage includes production gotchas, quality checklists, and architecture decisions your team will actually face when shipping RAG to users.</p>
       </div>
     </div>
   </div>
@@ -1613,6 +1560,40 @@ input[type=range]::-webkit-slider-thumb {
         <p>RAG powers enterprise Q&A, support bots, code assistants, legal research, and other grounded knowledge workflows—where “answer quality + citations” matters.</p>
       </div>
     </div>
+
+    <!-- The RAG Pipeline (moved from Home) -->
+    <div class="naive-rag" style="margin-top:0.5rem;">
+      <div class="naive-rag-title">The RAG Pipeline — Every Step From Scratch</div>
+      <div class="naive-rag-sub">Every RAG system follows this exact flow. Click each step below to explore it in detail and track your progress.</div>
+      <div class="naive-rag-steps">
+        <div class="naive-rag-steprow">
+          <div class="naive-step-card" data-index="0" data-page="loading" onclick="naiveStepClick(this)"><div class="naive-step-icon">📄</div><div class="naive-step-label">Load Documents</div></div>
+          <div class="naive-step-card" data-index="1" data-page="preprocessing" onclick="naiveStepClick(this)"><div class="naive-step-icon">🧽</div><div class="naive-step-label">Clean Text</div></div>
+          <div class="naive-step-card" data-index="2" data-page="chunking" onclick="naiveStepClick(this)"><div class="naive-step-icon">✂️</div><div class="naive-step-label">Chunk Text</div></div>
+          <div class="naive-step-card" data-index="3" data-page="embeddings" onclick="naiveStepClick(this)"><div class="naive-step-icon">🔢</div><div class="naive-step-label">Embed Chunks</div></div>
+          <div class="naive-step-card" data-index="4" data-page="vectorstore" onclick="naiveStepClick(this)"><div class="naive-step-icon">🗄</div><div class="naive-step-label">Vector DB</div></div>
+          <div class="naive-step-card" data-index="5" data-page="retrieval" onclick="naiveStepClick(this)"><div class="naive-step-icon">🔍</div><div class="naive-step-label">Retrieve</div></div>
+          <div class="naive-step-card" data-index="6" data-page="generation" onclick="naiveStepClick(this)"><div class="naive-step-icon">📝</div><div class="naive-step-label">Build Prompt</div></div>
+          <div class="naive-step-card" data-index="7" data-page="generation" onclick="naiveStepClick(this)"><div class="naive-step-icon">🤖</div><div class="naive-step-label">LLM</div></div>
+          <div class="naive-step-card" data-index="8" data-page="generation" onclick="naiveStepClick(this)"><div class="naive-step-icon">✅</div><div class="naive-step-label">Answer</div></div>
+        </div>
+        <div class="naive-rag-line"></div>
+        <div class="naive-rag-hint">Click each step to jump to that section + mark your progress 👆</div>
+      </div>
+    </div>
+
+    <!-- Use Cases -->
+    <div style="margin-top:2rem;">
+      <div class="section-title" style="font-size:1.1rem;margin-bottom:0.3rem">Real-World Use Cases</div>
+      <div class="section-sub">RAG is used anywhere you need answers grounded in your own documents — not guesses.</div>
+      <div class="info-box"><span class="ib-icon">💡</span><div class="ib-text">RAG is used anywhere you need answers grounded in your own documents. The pipeline helps your agent retrieve the right evidence, then generate a traceable, citable response — no hallucinations, no guessing.</div></div>
+      <div class="cards-grid">
+        <div class="card"><div class="card-icon">📄</div><h4>Use Case: PDF Q&amp;A</h4><p>Upload a 200-page company manual and ask questions. The system retrieves the exact chunks and answers with page-based citations.</p></div>
+        <div class="card"><div class="card-icon">🧠</div><h4>Use Case: Knowledge Base</h4><p>Build an internal chatbot that answers from policies, handbooks, and runbooks — optionally filtered by department or document type.</p></div>
+        <div class="card"><div class="card-icon">💬</div><h4>Use Case: Support Bot</h4><p>When customers ask about features or troubleshooting, retrieve relevant docs and generate a grounded, reliable response every time.</p></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
