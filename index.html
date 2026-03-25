@@ -12,6 +12,7 @@
   --surface2: #171717;
   --border: #222222;
   --border2: #2a2a2a;
+  --content-max: 1120px;
   --text: #e8e8e8;
   --text-muted: #888888;
   --text-dim: #444444;
@@ -124,7 +125,7 @@ main {
 /* ─── HERO (Home) ─── */
 .hero {
   padding: 5rem 3rem 3rem;
-  max-width: 960px;
+  max-width: var(--content-max);
   margin: 0 auto;
   text-align: center;
 }
@@ -209,9 +210,9 @@ main {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
-  max-width: 960px;
+  max-width: var(--content-max);
   margin: 2rem auto;
-  padding: 0 3rem;
+  padding: 0;
 }
 @media(max-width:700px){ .problem-cards { grid-template-columns: 1fr; } }
 
@@ -232,9 +233,9 @@ main {
 
 /* ─── PAGE HEADER (shared) ─── */
 .page-header {
-  padding: 3rem 3rem 2rem;
+  padding: 3rem 1.5rem 2rem;
   border-bottom: 1px solid var(--border);
-  max-width: 960px;
+  max-width: var(--content-max);
   margin: 0 auto;
 }
 .page-header .step-label {
@@ -262,9 +263,15 @@ main {
 
 /* ─── PAGE BODY ─── */
 .page-body {
-  max-width: 960px;
+  max-width: var(--content-max);
   margin: 0 auto;
-  padding: 2.5rem 3rem;
+  padding: 2.5rem 1.5rem;
+}
+
+@media(max-width:900px){
+  .page-header { padding-left: 1rem; padding-right: 1rem; }
+  .page-body { padding-left: 1rem; padding-right: 1rem; }
+  .hero { padding-left: 1.5rem; padding-right: 1.5rem; }
 }
 
 /* ─── INFO BOX ─── */
@@ -437,6 +444,28 @@ input[type=range]::-webkit-slider-thumb {
   background: var(--orange);
   cursor: pointer;
   box-shadow: 0 0 6px rgba(249,115,22,0.5);
+}
+
+/* Retrieval: Top-k slider row */
+.topk-row {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  margin-bottom: 1.2rem;
+  flex-wrap: wrap;
+}
+.topk-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  min-width: 70px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.topk-val {
+  font-size: 0.72rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--orange);
+  min-width: 38px;
+  text-align: right;
 }
 
 /* ─── EMBEDDINGS: 2D SCATTER ─── */
@@ -740,6 +769,12 @@ input[type=range]::-webkit-slider-thumb {
   border-radius: 4px;
   border: 1px solid;
 }
+.rr-reason {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  margin-top: 0.15rem;
+}
 
 /* ─── PROMPT BUILDER ─── */
 .prompt-demo {
@@ -779,6 +814,7 @@ input[type=range]::-webkit-slider-thumb {
 .ps-system { color: var(--orange); }
 .ps-context { color: var(--teal); }
 .ps-question { color: var(--purple); }
+.ps-final { color: var(--green); }
 
 .prompt-content {
   background: var(--surface2);
@@ -1030,56 +1066,49 @@ input[type=range]::-webkit-slider-thumb {
   <div class="page-header">
     <div class="step-label">STEP 01</div>
     <h2>What is RAG &amp; Why You Need It</h2>
-    <p>LLMs are powerful but they have two critical problems. RAG solves both.</p>
+    <p>LLMs are great at language, but they don’t automatically know your private documents and they can still confidently hallucinate. RAG fixes both by retrieving the most relevant passages from your knowledge base and grounding the LLM’s response in that context.</p>
   </div>
   <div class="page-body">
-    <div class="info-box">
-      <span class="ib-icon">🧠</span>
-      <div class="ib-text"><strong>Retrieval-Augmented Generation (RAG)</strong> = Retrieval + Augmentation + Generation. At query time, the system retrieves relevant passages from your knowledge base and injects them into the LLM's prompt as context, before generating the answer.</div>
+    <!-- Matches the reference screenshot: Problem/Solution cards first -->
+    <div class="problem-cards" style="padding:0; margin-top:1.2rem; margin-bottom:1.8rem;">
+      <div class="p-card">
+        <div class="p-icon">🚫</div>
+        <h3>Problem 1: No Private Data</h3>
+        <p>GPT-4 was trained on public internet data. It knows nothing about your company docs, internal PDFs, or proprietary knowledge. Ask it about your <em>HR policy?</em> It will guess—or worse, make something up.</p>
+      </div>
+      <div class="p-card">
+        <div class="p-icon">😵</div>
+        <h3>Problem 2: Hallucinations</h3>
+        <p>LLMs confidently generate false information. They don’t “know”—they predict the next token. Without grounding in real data, they fabricate facts, dates, numbers, and quotes.</p>
+      </div>
+      <div class="p-card solution">
+        <div class="p-icon">✅</div>
+        <h3>Solution: RAG</h3>
+        <p>Retrieval-Augmented Generation: first <em>retrieve</em> relevant information from your documents, then <em>feed</em> it to the LLM as context. The answer is grounded in your actual data, not guesses.</p>
+      </div>
     </div>
 
-    <div class="section-title">The RAG Pipeline at a Glance</div>
-    <div class="section-sub">Two phases: Indexing (one-time, offline) and Querying (real-time, per request)</div>
-
-    <div style="background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:1.5rem;margin-bottom:2rem;overflow-x:auto">
-      <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem">
-        <span style="font-size:0.65rem;font-family:'JetBrains Mono',monospace;color:var(--yellow);background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.3);padding:0.2rem 0.6rem;border-radius:4px;font-weight:700">INDEXING</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.5rem">
-        <span style="background:var(--surface2);border:1px solid var(--border2);padding:0.5rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'JetBrains Mono',monospace;color:var(--yellow)">Raw Docs</span>
-        <span style="color:var(--text-dim)">→</span>
-        <span style="background:var(--surface2);border:1px solid var(--border2);padding:0.5rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'JetBrains Mono',monospace">Loader</span>
-        <span style="color:var(--text-dim)">→</span>
-        <span style="background:var(--surface2);border:1px solid var(--border2);padding:0.5rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'JetBrains Mono',monospace">Cleaner</span>
-        <span style="color:var(--text-dim)">→</span>
-        <span style="background:var(--surface2);border:1px solid var(--border2);padding:0.5rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'JetBrains Mono',monospace">Chunker</span>
-        <span style="color:var(--text-dim)">→</span>
-        <span style="background:var(--surface2);border:1px solid var(--border2);padding:0.5rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'JetBrains Mono',monospace">Embedder</span>
-        <span style="color:var(--text-dim)">→</span>
-        <span style="background:var(--surface2);border:1px solid rgba(34,197,94,0.3);padding:0.5rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'JetBrains Mono',monospace;color:var(--green)">Vector DB</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.8rem">
-        <span style="font-size:0.65rem;font-family:'JetBrains Mono',monospace;color:var(--green);background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);padding:0.2rem 0.6rem;border-radius:4px;font-weight:700">QUERYING</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
-        <span style="background:var(--surface2);border:1px solid rgba(34,197,94,0.3);padding:0.5rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'JetBrains Mono',monospace;color:var(--green)">User Query</span>
-        <span style="color:var(--text-dim)">→</span>
-        <span style="background:var(--surface2);border:1px solid var(--border2);padding:0.5rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'JetBrains Mono',monospace">Embed Query</span>
-        <span style="color:var(--text-dim)">→</span>
-        <span style="background:var(--surface2);border:1px solid var(--border2);padding:0.5rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'JetBrains Mono',monospace">ANN Search</span>
-        <span style="color:var(--text-dim)">→</span>
-        <span style="background:var(--surface2);border:1px solid var(--border2);padding:0.5rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'JetBrains Mono',monospace">Top-k Chunks</span>
-        <span style="color:var(--text-dim)">→</span>
-        <span style="background:var(--surface2);border:1px solid var(--border2);padding:0.5rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'JetBrains Mono',monospace">Augment Prompt</span>
-        <span style="color:var(--text-dim)">→</span>
-        <span style="background:var(--surface2);border:1px solid rgba(34,197,94,0.3);padding:0.5rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'JetBrains Mono',monospace;color:var(--green)">LLM Answer</span>
-      </div>
+    <div class="info-box" style="margin-bottom:2rem;">
+      <span class="ib-icon">💡</span>
+      <div class="ib-text">Think of it like “open-book QA”. Instead of asking the model to answer from memory, RAG retrieves the exact pages (chunks) from your knowledge base and shows them to the LLM as context. The LLM can then answer with real, traceable evidence.</div>
     </div>
 
     <div class="cards-grid">
-      <div class="card"><div class="card-icon">🔍</div><h4>Retrieval</h4><p>Semantically search your knowledge base using vector similarity. Finds relevant context even when the user's words don't exactly match the document text.</p></div>
-      <div class="card"><div class="card-icon">💉</div><h4>Augmentation</h4><p>Inject retrieved context into the LLM prompt. The model sees both the question and the relevant document passages before generating an answer.</p></div>
-      <div class="card"><div class="card-icon">✨</div><h4>Generation</h4><p>The LLM generates an answer grounded in the provided context. With temperature=0, answers are deterministic and faithful to the source documents.</p></div>
+      <div class="card">
+        <div class="card-icon">📐</div>
+        <h4>Two Phases</h4>
+        <p><strong style="color:var(--yellow)">Indexing</strong> (offline): load → preprocess → chunk → embed → store. <strong style="color:var(--green)">Querying</strong> (online): embed query → retrieve → augment → generate.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🎯</div>
+        <h4>Why Not Fine-Tune?</h4>
+        <p>Fine-tuning is expensive, slow to update, and still hallucinations-prone. RAG is cheaper, always up-to-date, and traceable—you can point to the document passages behind the answer.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">⚡</div>
+        <h4>Production Ready</h4>
+        <p>RAG powers enterprise Q&A, support bots, code assistants, legal research, and other grounded knowledge workflows—where “answer quality + citations” matters.</p>
+      </div>
     </div>
   </div>
 </div>
@@ -1091,7 +1120,7 @@ input[type=range]::-webkit-slider-thumb {
   <div class="page-header">
     <div class="step-label">STEP 02</div>
     <h2>Document Loading</h2>
-    <p>Ingest raw source material into a uniform text format. PDFs, Word docs, HTML, CSVs, code files — everything becomes a Document object with content + metadata.</p>
+    <p>Ingest raw source material into a uniform text format. PDFs, Word docs, HTML, CSVs, and code all become a <strong>Document</strong> object with <strong>page_content</strong> (text) and <strong>metadata</strong> (e.g., source filename + page number). This “metadata-first” design is what makes citations and filtered retrieval possible later.</p>
   </div>
   <div class="page-body">
     <div class="cards-grid">
@@ -1139,7 +1168,7 @@ docs = loader.<span class="fn">load</span>()
   <div class="page-header">
     <div class="step-label">STEP 03</div>
     <h2>Preprocessing &amp; Cleaning</h2>
-    <p>Garbage in, garbage out. Cleaning raw text before chunking dramatically improves retrieval quality.</p>
+    <p>Garbage in, garbage out. Cleaning raw text before chunking dramatically improves retrieval quality by removing noise (boilerplate, headers/footers, encoding issues), normalizing punctuation/whitespace, and enriching metadata so downstream steps can search and filter more precisely.</p>
   </div>
   <div class="page-body">
     <div class="cards-grid">
@@ -1182,7 +1211,7 @@ docs = loader.<span class="fn">load</span>()
   <div class="page-header">
     <div class="step-label">STEP 04</div>
     <h2>Chunking</h2>
-    <p>Split documents into segments. Chunk size is the most impactful hyperparameter — too small loses context, too large hurts precision.</p>
+    <p>Split documents into segments so retrieval can find the right “evidence window”. Chunk size is the most impactful hyperparameter: too small loses meaning, too large lowers precision. Overlap helps when key facts span boundaries, but too much overlap wastes context and creates redundancy.</p>
   </div>
   <div class="page-body">
     <div class="section-title">Interactive Chunking Demo</div>
@@ -1226,9 +1255,9 @@ docs = loader.<span class="fn">load</span>()
     </div>
 
     <div class="cards-grid">
-      <div class="card"><div class="card-icon">📏</div><h4>Size Rules of Thumb</h4><p><strong style="color:var(--yellow)">128–256 tokens</strong> — precise factual retrieval<br><strong style="color:var(--orange)">512 tokens</strong> — balanced (most common)<br><strong style="color:var(--green)">1024+ tokens</strong> — long-form reasoning</p></div>
-      <div class="card"><div class="card-icon">🔁</div><h4>Overlap Strategy</h4><p>10–20% overlap prevents boundary artifacts where a key fact spans two chunks. Too much overlap → redundant retrieval results → wasted context window.</p></div>
-      <div class="card"><div class="card-icon">🌲</div><h4>Recursive Splitter</h4><p>Default choice. Tries separators in order: <code style="color:var(--teal)">["\n\n", "\n", ". ", " "]</code>. Respects paragraph → sentence → word hierarchy. Rarely splits mid-word.</p></div>
+      <div class="card"><div class="card-icon">📏</div><h4>Size Rules of Thumb</h4><p><strong style="color:var(--yellow)">128–256 tokens</strong> — precise factual retrieval (great for direct Q&A)<br><strong style="color:var(--orange)">512 tokens</strong> — balanced context window (best default for most teams)<br><strong style="color:var(--green)">1024+ tokens</strong> — better for multi-hop explanations, but slower and more expensive</p></div>
+      <div class="card"><div class="card-icon">🔁</div><h4>Overlap Strategy</h4><p>Use ~10–20% overlap to prevent “boundary misses” when a key sentence is split across two chunks. Too much overlap increases redundant matches and wastes prompt context window.</p></div>
+      <div class="card"><div class="card-icon">🌲</div><h4>Recursive Splitter</h4><p>Default choice. Tries separators in order: <code style="color:var(--teal)">["\n\n", "\n", ". ", " "]</code>. This preserves paragraph → sentence → word structure, so retrieval returns chunks that read naturally. For production, prefer a token-based length function (not `len`).</p></div>
     </div>
 
     <div class="code-block">
@@ -1256,7 +1285,7 @@ avg = <span class="fn">sum</span>(<span class="fn">len</span>(c.page_content) <s
   <div class="page-header">
     <div class="step-label">STEP 05</div>
     <h2>Embeddings</h2>
-    <p>Turn text into numbers that capture meaning. Similar meanings → similar numbers → we can search by meaning, not just keywords.</p>
+    <p>Turn text into vectors that capture meaning. Similar meanings produce similar vectors, so retrieval can match concepts even when the wording doesn’t match exactly. In practice you’ll also batch requests for speed, cache embeddings to avoid rework, and normalize vectors so cosine similarity behaves consistently.</p>
   </div>
   <div class="page-body">
     <div class="info-box">
@@ -1324,7 +1353,7 @@ embeddings  = <span class="fn">get_embeddings</span>(chunk_texts)
   <div class="page-header">
     <div class="step-label">STEP 06</div>
     <h2>Vector Store</h2>
-    <p>A database optimized for approximate nearest-neighbor (ANN) search over dense vectors. Stores embeddings + metadata for filtered retrieval.</p>
+    <p>A database optimized for approximate nearest-neighbor (ANN) search over dense vectors. A vector store keeps both the embeddings and their metadata, letting you retrieve fast (via ANN) while still filtering by document attributes (type, date, department, etc.) so results stay relevant.</p>
   </div>
   <div class="page-body">
     <div class="section-title">ChromaDB — Your Local Vector Store</div>
@@ -1373,7 +1402,7 @@ collection.<span class="fn">add</span>(
   <div class="page-header">
     <div class="step-label">STEP 07</div>
     <h2>Retrieval</h2>
-    <p>Now the magic — given a question, find the most relevant chunks from your vector store using cosine similarity.</p>
+    <p>Now the magic: given a question, embed it and search the vector store to find the most relevant chunks (usually top-k by cosine similarity). In production you often combine dense (vector) similarity with sparse (keyword) matching and optionally rerank the top-k for higher answer quality.</p>
   </div>
   <div class="page-body">
 
@@ -1401,13 +1430,18 @@ collection.<span class="fn">add</span>(
         <input class="retrieval-input" id="retrievalQuery" type="text" value="What is the leave policy?" placeholder="Ask a question...">
         <button class="retrieve-btn" onclick="doRetrieval()">🔍 Retrieve</button>
       </div>
+      <div class="topk-row">
+        <span class="topk-label">Top-k</span>
+        <input type="range" min="1" max="5" value="3" id="topKSlider" oninput="document.getElementById('topKVal').textContent = this.value">
+        <span class="topk-val" id="topKVal">3</span>
+      </div>
       <div class="retrieval-results" id="retrievalResults"></div>
     </div>
 
     <div class="cards-grid">
-      <div class="card"><div class="card-icon">🔀</div><h4>Hybrid Search</h4><p>Combine dense vector similarity (semantic) with BM25 sparse keyword matching. Reciprocal Rank Fusion merges scores. Outperforms either alone on rare proper nouns.</p></div>
-      <div class="card"><div class="card-icon">🏅</div><h4>Reranking</h4><p>Use a cross-encoder (Cohere Rerank, BGE-Reranker) on top-k results. Far more accurate than bi-encoder similarity. Adds ~100ms latency — worth it.</p></div>
-      <div class="card"><div class="card-icon">🪄</div><h4>HyDE</h4><p>Hypothetical Document Embeddings — ask LLM to generate a fake answer, embed it, use that embedding for retrieval. Closes the query-document distribution gap.</p></div>
+      <div class="card"><div class="card-icon">🔀</div><h4>Hybrid Search</h4><p>Combine dense vector similarity (semantic meaning) with BM25 sparse keyword matching. Reciprocal Rank Fusion merges both views, which helps when queries contain rare names, IDs, or exact phrases. Tune weighting based on what your users search for.</p></div>
+      <div class="card"><div class="card-icon">🏅</div><h4>Reranking</h4><p>After retrieving top-k with fast vector search, use a cross-encoder reranker to score (query, chunk) pairs more precisely. This often improves answer quality noticeably, at the cost of added latency—so keep k small (like 5–20).</p></div>
+      <div class="card"><div class="card-icon">🪄</div><h4>HyDE</h4><p>Hypothetical Document Embeddings: generate a plausible “answer draft” from the LLM, embed that hypothetical text, then retrieve using the hypothetical embedding. This reduces the mismatch between how users ask questions and how documents are phrased.</p></div>
     </div>
   </div>
 </div>
@@ -1419,7 +1453,7 @@ collection.<span class="fn">add</span>(
   <div class="page-header">
     <div class="step-label">STEP 08</div>
     <h2>Generation</h2>
-    <p>Assemble retrieved context into a structured prompt and pass to the LLM. The model synthesizes a grounded, citable answer.</p>
+    <p>Assemble the retrieved chunks into a structured prompt and pass them to the LLM. The prompt should enforce grounding rules (answer only from provided context; cite sources) so the model becomes reliable and reviewable—rather than guessing from world knowledge.</p>
   </div>
   <div class="page-body">
 
@@ -1431,7 +1465,7 @@ collection.<span class="fn">add</span>(
 
       <div class="prompt-section" id="ps1" style="display:none">
         <div class="prompt-section-label ps-system">SYSTEM MESSAGE</div>
-        <div class="prompt-content show">You are a helpful assistant. Answer questions <strong>ONLY</strong> based on the provided context. If the answer is not in the context, say "I don't have enough information to answer this."</div>
+        <div class="prompt-content show">You are a helpful assistant. Answer questions <strong>ONLY</strong> based on the provided context (no outside knowledge). If the answer is not explicitly supported by the context, say "I don't have enough information to answer this."</div>
       </div>
 
       <div class="prompt-section" id="ps2" style="display:none">
@@ -1446,6 +1480,21 @@ collection.<span class="fn">add</span>(
       <div class="prompt-section" id="ps3" style="display:none">
         <div class="prompt-section-label ps-question">USER QUESTION</div>
         <div class="prompt-content show">What is the leave policy? How many leaves do I get?</div>
+      </div>
+
+      <div class="prompt-section" id="ps4" style="display:none">
+        <div class="prompt-section-label ps-final">AUGMENTED PROMPT READY</div>
+        <div class="prompt-content show">
+          The model receives:
+          <br><br>
+          <span style="color:var(--orange);font-weight:700">SYSTEM</span> (answer only from context)
+          <br>
+          <span style="color:var(--teal);font-weight:700">CONTEXT</span> (the retrieved chunks as evidence)
+          <br>
+          <span style="color:var(--purple);font-weight:700">QUESTION</span> (what the user asked)
+          <br><br>
+          Then it generates a grounded answer with citations.
+        </div>
       </div>
     </div>
 
@@ -1848,12 +1897,48 @@ const RETRIEVAL_DB = [
   { text:"The onboarding process takes 2 weeks and includes department orientation and system access setup.", source:"onboarding.pdf, p.2", scores:{"leave policy":0.31,"sick days":0.28,"hr portal":0.42} },
 ];
 
+function hashStr(str) {
+  // Simple deterministic hash (no external deps).
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function randFromSeed(seed) {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
 function getScore(doc, query) {
   const q = query.toLowerCase();
+  let best = null;
   for (const key of Object.keys(doc.scores)) {
-    if (q.includes(key)) return doc.scores[key];
+    if (q.includes(key)) {
+      const s = doc.scores[key];
+      if (best === null || s > best) best = s;
+    }
   }
-  return Math.random()*0.3+0.2;
+  if (best !== null) return best;
+
+  // Deterministic fallback so demo output doesn't change between runs.
+  const seed = hashStr(query) + hashStr(doc.text);
+  return 0.2 + 0.35 * randFromSeed(seed);
+}
+
+function getBestMatchedKey(doc, query) {
+  const q = query.toLowerCase();
+  let bestKey = null;
+  let bestScore = -Infinity;
+  for (const key of Object.keys(doc.scores)) {
+    if (q.includes(key) && doc.scores[key] > bestScore) {
+      bestScore = doc.scores[key];
+      bestKey = key;
+    }
+  }
+  return bestKey;
 }
 
 function doRetrieval() {
@@ -1861,8 +1946,19 @@ function doRetrieval() {
   const container = document.getElementById('retrievalResults');
   container.innerHTML='<div style="font-size:0.75rem;color:var(--text-muted);font-family:JetBrains Mono,monospace;margin-bottom:0.8rem">Searching vector store...</div>';
 
-  const scored = RETRIEVAL_DB.map(d => ({ ...d, score: getScore(d, query) }))
-    .sort((a,b)=>b.score-a.score).slice(0,3);
+  const topK = Math.max(
+    1,
+    Math.min(5, parseInt(document.getElementById('topKSlider')?.value || '3', 10) || 3)
+  );
+
+  const scored = RETRIEVAL_DB
+    .map(d => {
+      const matchedKey = getBestMatchedKey(d, query);
+      const score = getScore(d, query);
+      return { ...d, matchedKey, score };
+    })
+    .sort((a,b)=>b.score-a.score)
+    .slice(0, topK);
 
   setTimeout(() => {
     container.innerHTML='';
@@ -1875,6 +1971,7 @@ function doRetrieval() {
         <div class="rr-body">
           <div class="rr-text">${d.text}</div>
           <div class="rr-source">📄 ${d.source}</div>
+          <div class="rr-reason">${d.matchedKey ? `Signal: \"${d.matchedKey}\"` : 'Signal: (semantic match)'}</div>
         </div>
         <div class="rr-score" style="color:${scoreColor};border-color:${scoreColor}">Similarity: ${d.score.toFixed(2)}</div>
       `;
@@ -1890,7 +1987,7 @@ function doRetrieval() {
 let promptStep = 0;
 function buildPrompt() {
   promptStep++;
-  const steps = ['ps1','ps2','ps3'];
+  const steps = ['ps1','ps2','ps3','ps4'];
   if (promptStep <= steps.length) {
     document.getElementById(steps[promptStep-1]).style.display='';
     if (promptStep >= steps.length) {
