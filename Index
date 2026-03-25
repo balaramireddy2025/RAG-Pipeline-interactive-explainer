@@ -1,0 +1,1905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Pipeline — Interactive Deep Dive</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0a;
+  --surface: #111111;
+  --surface2: #171717;
+  --border: #222222;
+  --border2: #2a2a2a;
+  --text: #e8e8e8;
+  --text-muted: #888888;
+  --text-dim: #444444;
+  --orange: #f97316;
+  --orange-dim: rgba(249,115,22,0.15);
+  --green: #22c55e;
+  --green-dim: rgba(34,197,94,0.1);
+  --teal: #14b8a6;
+  --teal-dim: rgba(20,184,166,0.1);
+  --purple: #a855f7;
+  --purple-dim: rgba(168,85,247,0.1);
+  --blue: #3b82f6;
+  --blue-dim: rgba(59,130,246,0.1);
+  --yellow: #eab308;
+  --red: #ef4444;
+  --pink: #ec4899;
+  --chunk1: #f97316;
+  --chunk2: #a855f7;
+  --chunk3: #22c55e;
+  --chunk4: #3b82f6;
+  --chunk5: #ec4899;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── NAV ─── */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 200;
+  background: rgba(10,10,10,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+}
+
+.nav-brand {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  white-space: nowrap;
+}
+.nav-brand .dot { color: var(--orange); }
+.nav-brand .sub { color: var(--text-muted); font-weight: 400; }
+
+.nav-links {
+  display: flex;
+  gap: 0;
+  align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.nav-links::-webkit-scrollbar { display: none; }
+
+.nav-link {
+  padding: 0 1rem;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  white-space: nowrap;
+  user-select: none;
+}
+.nav-link:hover { color: var(--text); }
+.nav-link.active { color: var(--text); border-bottom-color: var(--orange); }
+
+/* Progress bar */
+.nav-progress {
+  position: fixed;
+  top: 52px; left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--orange), var(--green), var(--teal));
+  transition: width 0.3s ease;
+  z-index: 199;
+}
+
+/* ─── MAIN LAYOUT ─── */
+main {
+  padding-top: 52px;
+}
+
+/* ─── PAGE ─── */
+.page {
+  display: none;
+  min-height: calc(100vh - 52px);
+  padding: 0 0 4rem;
+}
+.page.active { display: block; }
+
+/* ─── HERO (Home) ─── */
+.hero {
+  padding: 5rem 3rem 3rem;
+  max-width: 960px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--orange-dim);
+  border: 1px solid rgba(249,115,22,0.3);
+  color: var(--orange);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.35rem 1rem;
+  border-radius: 100px;
+  margin-bottom: 2rem;
+}
+
+.hero h1 {
+  font-size: clamp(2.8rem, 6vw, 5rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin-bottom: 1.5rem;
+}
+
+.hero h1 .line2 {
+  display: block;
+  background: linear-gradient(135deg, var(--orange) 0%, var(--green) 50%, var(--teal) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-sub {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  max-width: 520px;
+  margin: 0 auto 3rem;
+  line-height: 1.7;
+  font-weight: 400;
+}
+
+/* Pipeline nav pills on hero */
+.pipeline-steps {
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 4rem;
+}
+
+.step-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-muted);
+}
+.step-pill:hover, .step-pill.done {
+  border-color: var(--green);
+  color: var(--green);
+  background: var(--green-dim);
+}
+.step-pill.current {
+  border-color: var(--orange);
+  color: var(--orange);
+  background: var(--orange-dim);
+}
+
+/* Problem/Solution cards */
+.problem-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  max-width: 960px;
+  margin: 2rem auto;
+  padding: 0 3rem;
+}
+@media(max-width:700px){ .problem-cards { grid-template-columns: 1fr; } }
+
+.p-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: border-color 0.2s;
+}
+.p-card:hover { border-color: var(--border2); }
+.p-card .p-icon { font-size: 1.8rem; margin-bottom: 1rem; }
+.p-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem; }
+.p-card p { font-size: 0.8rem; color: var(--text-muted); line-height: 1.65; font-weight: 400; }
+.p-card p em { color: var(--orange); font-style: normal; font-weight: 600; }
+.p-card.solution { border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.04); }
+.p-card.solution h3 { color: var(--green); }
+
+/* ─── PAGE HEADER (shared) ─── */
+.page-header {
+  padding: 3rem 3rem 2rem;
+  border-bottom: 1px solid var(--border);
+  max-width: 960px;
+  margin: 0 auto;
+}
+.page-header .step-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 0.6rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+.page-header h2 {
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.6rem;
+}
+.page-header p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+  max-width: 600px;
+  font-weight: 400;
+}
+
+/* ─── PAGE BODY ─── */
+.page-body {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2.5rem 3rem;
+}
+
+/* ─── INFO BOX ─── */
+.info-box {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 1.2rem 1.4rem;
+  margin-bottom: 2rem;
+}
+.info-box .ib-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 0.1rem; }
+.info-box .ib-text { font-size: 0.82rem; color: var(--text-muted); line-height: 1.65; font-weight: 400; }
+.info-box .ib-text strong { color: var(--text); font-weight: 600; }
+
+/* ─── SECTION TITLE ─── */
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+  letter-spacing: -0.01em;
+}
+.section-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  font-weight: 400;
+}
+
+/* ─── CHUNKING ─── */
+.chunk-demo-box {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.chunk-window-bar {
+  background: #1a1a1a;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.traffic-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+}
+.td-red { background: #ff5f57; }
+.td-yellow { background: #ffbd2e; }
+.td-green { background: #28ca41; }
+.window-label {
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+}
+
+.chunk-strategy-tabs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.cs-tab {
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text-muted);
+  background: transparent;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: inherit;
+}
+.cs-tab:hover { color: var(--text); border-color: #444; }
+.cs-tab.active {
+  background: var(--orange-dim);
+  border-color: var(--orange);
+  color: var(--orange);
+}
+
+.chunk-text-area {
+  padding: 1.5rem;
+  font-size: 0.85rem;
+  line-height: 2.1;
+  color: #aaa;
+  font-weight: 400;
+  min-height: 100px;
+}
+
+.ck { display: inline; padding: 2px 0; border-radius: 3px; cursor: default; }
+.ck0 { background: rgba(249,115,22,0.18); border-bottom: 2px solid var(--chunk1); }
+.ck1 { background: rgba(168,85,247,0.14); border-bottom: 2px solid var(--chunk2); }
+.ck2 { background: rgba(34,197,94,0.12); border-bottom: 2px solid var(--chunk3); }
+.ck3 { background: rgba(59,130,246,0.14); border-bottom: 2px solid var(--chunk4); }
+.ck4 { background: rgba(236,72,153,0.12); border-bottom: 2px solid var(--chunk5); }
+
+.chunk-footer {
+  padding: 0.8rem 1.5rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.chunk-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--orange);
+}
+.chunk-count span { color: var(--text-muted); }
+.chunk-tags {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.ck-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  border: 1px solid;
+}
+
+.chunk-slider-row {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.csr-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  min-width: 90px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.csr-val {
+  font-size: 0.72rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--orange);
+  min-width: 65px;
+  text-align: right;
+}
+input[type=range] {
+  flex: 1; min-width: 100px;
+  -webkit-appearance: none;
+  height: 3px;
+  background: var(--border2);
+  border-radius: 2px;
+  outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--orange);
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(249,115,22,0.5);
+}
+
+/* ─── EMBEDDINGS: 2D SCATTER ─── */
+.scatter-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  position: relative;
+}
+.scatter-title {
+  font-size: 0.72rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+.scatter-canvas-wrap {
+  position: relative;
+  display: flex;
+  gap: 1rem;
+}
+#scatterCanvas {
+  border-radius: 8px;
+  background: #0d0d0d;
+  flex: 1;
+  cursor: crosshair;
+}
+.scatter-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+  min-width: 90px;
+  padding-top: 0.5rem;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+.legend-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ─── CODE BLOCK ─── */
+.code-block {
+  background: #0d0d0d;
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 1.4rem 1.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.76rem;
+  line-height: 1.85;
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+.code-block .cb-label {
+  position: absolute;
+  top: 0.7rem; right: 1rem;
+  font-size: 0.58rem;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.kw { color: #ff79c6; }
+.str { color: #f1fa8c; }
+.num { color: #bd93f9; }
+.cm { color: #444; font-style: italic; }
+.fn { color: #50fa7b; }
+.cls { color: #8be9fd; }
+.op { color: #ff79c6; }
+
+/* ─── VECTOR STORE ─── */
+.vstore-demo {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+.vstore-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 1.2rem;
+  font-weight: 400;
+}
+.vstore-btns {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.vs-btn {
+  padding: 0.45rem 1rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--text-muted);
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s;
+}
+.vs-btn:hover { border-color: #444; color: var(--text); }
+.vs-btn.primary {
+  background: rgba(34,197,94,0.1);
+  border-color: rgba(34,197,94,0.4);
+  color: var(--green);
+}
+.vs-btn.primary:hover { background: rgba(34,197,94,0.15); }
+.vs-btn.danger {
+  background: rgba(239,68,68,0.08);
+  border-color: rgba(239,68,68,0.3);
+  color: var(--red);
+}
+
+.vector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+  gap: 6px;
+  margin-bottom: 1rem;
+}
+.vg-cell {
+  aspect-ratio: 1;
+  border-radius: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.55rem;
+  color: var(--text-dim);
+  transition: all 0.4s;
+  cursor: default;
+}
+.vg-cell.filled {
+  background: rgba(34,197,94,0.08);
+  border-color: rgba(34,197,94,0.35);
+  color: var(--green);
+}
+.vg-cell.matched {
+  background: rgba(249,115,22,0.15);
+  border-color: var(--orange);
+  color: var(--orange);
+  box-shadow: 0 0 8px rgba(249,115,22,0.3);
+}
+
+.vstore-result {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid rgba(34,197,94,0.25);
+  background: rgba(34,197,94,0.06);
+  color: var(--green);
+  margin-bottom: 1rem;
+  display: none;
+}
+.vstore-result.show { display: block; }
+
+/* ─── RETRIEVAL: COSINE ─── */
+.cosine-demo {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+.cosine-canvas-wrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.2rem;
+}
+#cosineCanvas {
+  border-radius: 8px;
+  background: #0d0d0d;
+  max-width: 100%;
+}
+.cosine-score-label {
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+.cosine-btns {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.cos-btn {
+  padding: 0.38rem 1rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--text-muted);
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.cos-btn:hover { border-color: #555; color: var(--text); }
+.cos-btn.active {
+  background: var(--orange-dim);
+  border-color: var(--orange);
+  color: var(--orange);
+}
+
+/* Retrieval live demo */
+.retrieval-demo {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+.retrieval-input-row {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1.2rem;
+}
+.retrieval-input {
+  flex: 1;
+  padding: 0.7rem 1rem;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 0.85rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.retrieval-input:focus { border-color: var(--orange); }
+.retrieve-btn {
+  padding: 0.7rem 1.2rem;
+  background: var(--orange);
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: opacity 0.2s;
+}
+.retrieve-btn:hover { opacity: 0.85; }
+
+.retrieval-results { display: flex; flex-direction: column; gap: 0.6rem; }
+.rr-item {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.2rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  animation: fadeIn 0.3s ease;
+  opacity: 0;
+}
+.rr-item.show { opacity: 1; }
+@keyframes fadeIn { from{ opacity:0; transform:translateY(4px); } to{ opacity:1; transform:none; } }
+
+.rr-rank {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  background: var(--border2);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+.rr-body { flex: 1; }
+.rr-text { font-size: 0.82rem; color: var(--text); line-height: 1.55; margin-bottom: 0.5rem; font-weight: 400; }
+.rr-source { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; color: var(--text-dim); }
+.rr-score {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  border: 1px solid;
+}
+
+/* ─── PROMPT BUILDER ─── */
+.prompt-demo {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+.build-prompt-btn {
+  padding: 0.5rem 1.2rem;
+  border: 1px solid var(--orange);
+  background: transparent;
+  color: var(--orange);
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.2s;
+}
+.build-prompt-btn:hover { background: var(--orange-dim); }
+
+.prompt-section { margin-bottom: 1rem; }
+.prompt-section-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+.ps-system { color: var(--orange); }
+.ps-context { color: var(--teal); }
+.ps-question { color: var(--purple); }
+
+.prompt-content {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 0.8rem 1rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+  font-weight: 400;
+  display: none;
+  animation: fadeIn 0.4s ease;
+}
+.prompt-content.show { display: block; }
+.prompt-content strong { color: var(--text); }
+
+.ctx-chunk {
+  background: #0d0d0d;
+  border-left: 2px solid;
+  padding: 0.5rem 0.8rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  border-radius: 0 4px 4px 0;
+  font-weight: 400;
+}
+.ctx-chunk.c0 { border-left-color: var(--chunk1); }
+.ctx-chunk.c1 { border-left-color: var(--chunk2); }
+.ctx-chunk.c2 { border-left-color: var(--chunk3); }
+
+/* ─── LLM ANSWER ─── */
+.llm-answer-box {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+.llm-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid var(--border);
+}
+.llm-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  background: var(--green-dim);
+  color: var(--green);
+  border: 1px solid rgba(34,197,94,0.3);
+  font-weight: 600;
+}
+.llm-model { font-size: 0.72rem; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; }
+.llm-temp { font-size: 0.72rem; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.llm-answer {
+  font-size: 0.88rem;
+  line-height: 1.8;
+  color: var(--text);
+  font-weight: 400;
+}
+.llm-answer .hl { color: var(--green); font-weight: 600; }
+.llm-citations {
+  margin-top: 1.2rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--border);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--text-dim);
+}
+.cursor { display: inline-block; width: 2px; height: 0.85em; background: var(--green); vertical-align: middle; animation: blink 1s infinite; margin-left: 1px; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* ─── ACCORDION ─── */
+.acc { margin-bottom: 0.5rem; }
+.acc-header {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 0.9rem 1.2rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: border-color 0.2s;
+  user-select: none;
+}
+.acc-header:hover { border-color: #444; }
+.acc-header.open { border-color: var(--orange); color: var(--orange); border-radius: 8px 8px 0 0; }
+.acc-body {
+  display: none;
+  background: var(--surface2);
+  border: 1px solid var(--orange);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  padding: 1rem 1.2rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+  font-weight: 400;
+}
+.acc-body.open { display: block; }
+.acc-icon { font-size: 0.65rem; transition: transform 0.2s; }
+.acc-header.open .acc-icon { transform: rotate(180deg); }
+.acc-body strong { color: var(--text); }
+
+/* ─── CARDS ─── */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 1.3rem;
+  transition: border-color 0.2s;
+}
+.card:hover { border-color: #333; }
+.card .card-icon { font-size: 1.4rem; margin-bottom: 0.7rem; }
+.card h4 { font-size: 0.88rem; font-weight: 700; margin-bottom: 0.4rem; }
+.card p { font-size: 0.77rem; color: var(--text-muted); line-height: 1.6; font-weight: 400; }
+.card p strong { color: var(--text); }
+
+/* ─── METRICS ─── */
+.metrics-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.metric {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 1.2rem;
+  text-align: center;
+}
+.metric-val { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.03em; color: var(--orange); }
+.metric-label { font-size: 0.68rem; color: var(--text-muted); margin-top: 0.3rem; font-family: 'JetBrains Mono', monospace; }
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+/* ─── TOOLTIP ─── */
+.tooltip {
+  position: fixed;
+  background: #222;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.72rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text);
+  pointer-events: none;
+  z-index: 999;
+  white-space: nowrap;
+  display: none;
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">RAG<span class="dot">.</span><span class="sub">pipeline</span></div>
+  <div class="nav-links" id="navLinks">
+    <div class="nav-link active" data-page="home">Home</div>
+    <div class="nav-link" data-page="whatisrag">What is RAG</div>
+    <div class="nav-link" data-page="loading">Loading</div>
+    <div class="nav-link" data-page="preprocessing">Preprocessing</div>
+    <div class="nav-link" data-page="chunking">Chunking</div>
+    <div class="nav-link" data-page="embeddings">Embeddings</div>
+    <div class="nav-link" data-page="vectorstore">Vector Store</div>
+    <div class="nav-link" data-page="retrieval">Retrieval</div>
+    <div class="nav-link" data-page="generation">Generation</div>
+  </div>
+</nav>
+<div class="nav-progress" id="navProgress" style="width:11%"></div>
+
+<main>
+
+<!-- ═══════════════════════════════════════════
+     HOME
+═══════════════════════════════════════════ -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div class="hero-badge">⚡ DAY 1 · LECTURE 1</div>
+    <h1>Build Your First<br><span class="line2">RAG Pipeline</span></h1>
+    <p class="hero-sub">From zero to a working Retrieval-Augmented Generation app. Pure Python. No magic. Every step explained.</p>
+
+    <div class="pipeline-steps" id="homePipeline">
+      <div class="step-pill done" data-page="loading">📄 Load</div>
+      <div class="step-pill done" data-page="chunking">✂️ Chunk</div>
+      <div class="step-pill done" data-page="embeddings">🔢 Embed</div>
+      <div class="step-pill current" data-page="vectorstore">🗄 Store</div>
+      <div class="step-pill" data-page="retrieval">🔍 Retrieve</div>
+      <div class="step-pill" data-page="generation">💬 Prompt</div>
+      <div class="step-pill" data-page="generation">🤖 LLM</div>
+      <div class="step-pill" data-page="generation">✅ Answer</div>
+    </div>
+  </div>
+
+  <div class="problem-cards">
+    <div class="p-card">
+      <div class="p-icon">🚫</div>
+      <h3>Problem 1: No Private Data</h3>
+      <p>GPT-4 was trained on public internet data. It knows nothing about your company docs, internal PDFs, or proprietary knowledge. Ask it about your <em>HR policy?</em> It'll guess — or worse, make something up.</p>
+    </div>
+    <div class="p-card">
+      <div class="p-icon">😵</div>
+      <h3>Problem 2: Hallucinations</h3>
+      <p>LLMs confidently generate false information. They don't "know" — they predict the next token. Without grounding in real data, they fabricate facts, dates, numbers, and quotes.</p>
+    </div>
+    <div class="p-card solution">
+      <div class="p-icon">✅</div>
+      <h3>Solution: RAG</h3>
+      <p>Retrieval-Augmented Generation — first <em>retrieve</em> relevant information from your documents, then <em>feed</em> it to the LLM as context. The LLM answers based on your actual data, not guesses.</p>
+    </div>
+  </div>
+
+  <div class="page-body" style="padding-top:1rem">
+    <div class="section-title" style="font-size:1.3rem;margin-bottom:0.8rem">If you are going to ask a question related to your company from an LLM...</div>
+    <div class="info-box">
+      <span class="ib-icon">💡</span>
+      <div class="ib-text">RAG bridges the gap between a general-purpose language model and your specific knowledge base. Navigate through each step above to see exactly how it works — from loading raw documents all the way to generating grounded answers.</div>
+    </div>
+    <div class="cards-grid">
+      <div class="card"><div class="card-icon">📐</div><h4>Two Phases</h4><p><strong style="color:var(--yellow)">Indexing</strong> (offline): load → preprocess → chunk → embed → store. <strong style="color:var(--green)">Querying</strong> (online): embed query → retrieve → augment → generate.</p></div>
+      <div class="card"><div class="card-icon">🎯</div><h4>Why Not Fine-Tune?</h4><p>Fine-tuning is expensive, slow to update, and still hallucinations-prone. RAG is cheaper, always up-to-date, and traceable — you can cite exactly which document answered the question.</p></div>
+      <div class="card"><div class="card-icon">⚡</div><h4>Production Ready</h4><p>RAG powers enterprise Q&A, customer support bots, code assistants, legal research tools, and medical knowledge bases at companies like Notion, Stripe, and Anthropic.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     WHAT IS RAG
+═══════════════════════════════════════════ -->
+<div class="page" id="page-whatisrag">
+  <div class="page-header">
+    <div class="step-label">STEP 01</div>
+    <h2>What is RAG &amp; Why You Need It</h2>
+    <p>LLMs are powerful but they have two critical problems. RAG solves both.</p>
+  </div>
+  <div class="page-body">
+    <div class="info-box">
+      <span class="ib-icon">🧠</span>
+      <div class="ib-text"><strong>Retrieval-Augmented Generation (RAG)</strong> = Retrieval + Augmentation + Generation. At query time, the system retrieves relevant passages from your knowledge base and injects them into the LLM's prompt as context, before generating the answer.</div>
+    </div>
+
+    <div class="section-title">The RAG Pipeline at a Glance</div>
+    <div class="section-sub">Two phases: Indexing (one-time, offline) and Querying (real-time, per request)</div>
+
+    <div style="background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:1.5rem;margin-bottom:2rem;overflow-x:auto">
+      <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem">
+        <span style="font-size:0.65rem;font-family:'JetBrains Mono',monospace;color:var(--yellow);background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.3);padding:0.2rem 0.6rem;border-radius:4px;font-weight:700">INDEXING</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.5rem">
+        <span style="background:var(--surface2);border:1px solid var(--border2);padding:0.5rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'JetBrains Mono',monospace;color:var(--yellow)">Raw Docs</span>
+        <span style="color:var(--text-dim)">→</span>
+        <span style="background:var(--surface2);border:1px solid var(--border2);padding:0.5rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'JetBrains Mono',monospace">Loader</span>
+        <span style="color:var(--text-dim)">→</span>
+        <span style="background:var(--surface2);border:1px solid var(--border2);padding:0.5rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'JetBrains Mono',monospace">Cleaner</span>
+        <span style="color:var(--text-dim)">→</span>
+        <span style="background:var(--surface2);border:1px solid var(--border2);padding:0.5rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'JetBrains Mono',monospace">Chunker</span>
+        <span style="color:var(--text-dim)">→</span>
+        <span style="background:var(--surface2);border:1px solid var(--border2);padding:0.5rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'JetBrains Mono',monospace">Embedder</span>
+        <span style="color:var(--text-dim)">→</span>
+        <span style="background:var(--surface2);border:1px solid rgba(34,197,94,0.3);padding:0.5rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'JetBrains Mono',monospace;color:var(--green)">Vector DB</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.8rem">
+        <span style="font-size:0.65rem;font-family:'JetBrains Mono',monospace;color:var(--green);background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);padding:0.2rem 0.6rem;border-radius:4px;font-weight:700">QUERYING</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
+        <span style="background:var(--surface2);border:1px solid rgba(34,197,94,0.3);padding:0.5rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'JetBrains Mono',monospace;color:var(--green)">User Query</span>
+        <span style="color:var(--text-dim)">→</span>
+        <span style="background:var(--surface2);border:1px solid var(--border2);padding:0.5rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'JetBrains Mono',monospace">Embed Query</span>
+        <span style="color:var(--text-dim)">→</span>
+        <span style="background:var(--surface2);border:1px solid var(--border2);padding:0.5rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'JetBrains Mono',monospace">ANN Search</span>
+        <span style="color:var(--text-dim)">→</span>
+        <span style="background:var(--surface2);border:1px solid var(--border2);padding:0.5rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'JetBrains Mono',monospace">Top-k Chunks</span>
+        <span style="color:var(--text-dim)">→</span>
+        <span style="background:var(--surface2);border:1px solid var(--border2);padding:0.5rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'JetBrains Mono',monospace">Augment Prompt</span>
+        <span style="color:var(--text-dim)">→</span>
+        <span style="background:var(--surface2);border:1px solid rgba(34,197,94,0.3);padding:0.5rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'JetBrains Mono',monospace;color:var(--green)">LLM Answer</span>
+      </div>
+    </div>
+
+    <div class="cards-grid">
+      <div class="card"><div class="card-icon">🔍</div><h4>Retrieval</h4><p>Semantically search your knowledge base using vector similarity. Finds relevant context even when the user's words don't exactly match the document text.</p></div>
+      <div class="card"><div class="card-icon">💉</div><h4>Augmentation</h4><p>Inject retrieved context into the LLM prompt. The model sees both the question and the relevant document passages before generating an answer.</p></div>
+      <div class="card"><div class="card-icon">✨</div><h4>Generation</h4><p>The LLM generates an answer grounded in the provided context. With temperature=0, answers are deterministic and faithful to the source documents.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     LOADING
+═══════════════════════════════════════════ -->
+<div class="page" id="page-loading">
+  <div class="page-header">
+    <div class="step-label">STEP 02</div>
+    <h2>Document Loading</h2>
+    <p>Ingest raw source material into a uniform text format. PDFs, Word docs, HTML, CSVs, code files — everything becomes a Document object with content + metadata.</p>
+  </div>
+  <div class="page-body">
+    <div class="cards-grid">
+      <div class="card"><div class="card-icon">📄</div><h4>PDF / DOCX</h4><p>PyMuPDF, pdfplumber, python-docx. Extracts text, tables. Watch for scanned PDFs (need OCR) and multi-column layouts where text order gets scrambled.</p></div>
+      <div class="card"><div class="card-icon">🌐</div><h4>Web / HTML</h4><p>BeautifulSoup, Playwright for JS-heavy sites. Strip nav/footer boilerplate. Handle pagination. Respect robots.txt. Store the URL as metadata for citations.</p></div>
+      <div class="card"><div class="card-icon">📊</div><h4>Structured Data</h4><p>CSV, JSON, SQL → convert rows to natural language strings. Consider schema-aware chunking for tables. Each row can become a Document with field metadata.</p></div>
+      <div class="card"><div class="card-icon">💻</div><h4>Code / Markdown</h4><p>Use language-aware splitters to keep function/class boundaries intact. Comment blocks often carry more retrieval signal than the code itself.</p></div>
+    </div>
+
+    <div class="code-block">
+      <span class="cb-label">Python · LangChain</span>
+<span class="kw">from</span> langchain_community.document_loaders <span class="kw">import</span> <span class="cls">PyMuPDFLoader</span>
+<span class="kw">from</span> langchain_community.document_loaders <span class="kw">import</span> <span class="cls">DirectoryLoader</span>
+
+<span class="cm"># Load single PDF — preserves page numbers</span>
+loader = <span class="cls">PyMuPDFLoader</span>(<span class="str">"hr_policy.pdf"</span>)
+docs = loader.<span class="fn">load</span>()
+
+<span class="cm"># Batch-load an entire folder</span>
+loader = <span class="cls">DirectoryLoader</span>(<span class="str">"./documents"</span>, glob=<span class="str">"**/*.pdf"</span>)
+docs = loader.<span class="fn">load</span>()
+
+<span class="cm"># Each doc has .page_content and .metadata</span>
+<span class="fn">print</span>(docs[<span class="num">0</span>].metadata)
+<span class="cm"># → {'source': 'hr_policy.pdf', 'page': 0, 'total_pages': 12}</span>
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Loaded {len(docs)} pages"</span>)
+    </div>
+
+    <div class="acc">
+      <div class="acc-header" onclick="toggleAcc(this)">⚠️ Common pitfalls in document loading <span class="acc-icon">▼</span></div>
+      <div class="acc-body">
+        <strong>Scanned PDFs</strong> — text is an image; you need OCR (Tesseract, AWS Textract). Always check doc.page_content isn't empty after loading.<br><br>
+        <strong>Multi-column layouts</strong> — text extraction order scrambles. Use PyMuPDF's layout mode or pdfplumber's bbox extraction.<br><br>
+        <strong>Metadata loss</strong> — always preserve source file, page number, section heading. You'll need it for citations.<br><br>
+        <strong>Encoding issues</strong> — UTF-8 decode errors on legacy documents. Use <code style="color:var(--teal)">errors='replace'</code> or the <code style="color:var(--teal)">ftfy</code> library.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PREPROCESSING
+═══════════════════════════════════════════ -->
+<div class="page" id="page-preprocessing">
+  <div class="page-header">
+    <div class="step-label">STEP 03</div>
+    <h2>Preprocessing &amp; Cleaning</h2>
+    <p>Garbage in, garbage out. Cleaning raw text before chunking dramatically improves retrieval quality.</p>
+  </div>
+  <div class="page-body">
+    <div class="cards-grid">
+      <div class="card"><div class="card-icon">🧹</div><h4>Text Normalization</h4><p>Collapse multiple newlines, strip HTML tags, fix encoding, remove page headers/footers, normalize unicode characters and punctuation marks.</p></div>
+      <div class="card"><div class="card-icon">🏷</div><h4>Metadata Enrichment</h4><p>Add title, creation date, author, section heading, page number. This enables filtered retrieval: "only search Q3 reports from 2024" — no re-embedding needed.</p></div>
+      <div class="card"><div class="card-icon">🔗</div><h4>Deduplication</h4><p>Near-duplicate content wastes embedding budget and pollutes results with repetition. Use MinHash, SimHash, or cosine similarity on chunked text hashes.</p></div>
+      <div class="card"><div class="card-icon">🗂</div><h4>Document Classification</h4><p>Tag docs by type (legal, technical, FAQ) to enable routing to specialized embedding models or different retrieval pipelines per document class.</p></div>
+    </div>
+
+    <div class="code-block">
+      <span class="cb-label">Python · Cleaning</span>
+<span class="kw">import</span> re, unicodedata
+
+<span class="kw">def</span> <span class="fn">clean_text</span>(text: <span class="cls">str</span>) -> <span class="cls">str</span>:
+    <span class="cm"># Collapse excessive whitespace and newlines</span>
+    text = re.<span class="fn">sub</span>(<span class="str">r'\n{3,}'</span>, <span class="str">'\n\n'</span>, text)
+    text = re.<span class="fn">sub</span>(<span class="str">r' {2,}'</span>, <span class="str">' '</span>,  text)
+
+    <span class="cm"># Strip common boilerplate patterns</span>
+    text = re.<span class="fn">sub</span>(<span class="str">r'Page \d+ of \d+'</span>, <span class="str">''</span>, text)
+    text = re.<span class="fn">sub</span>(<span class="str">r'CONFIDENTIAL|DRAFT'</span>, <span class="str">''</span>, text,
+                   flags=re.IGNORECASE)
+
+    <span class="cm"># Normalize unicode (e.g. curly quotes → straight)</span>
+    text = unicodedata.<span class="fn">normalize</span>(<span class="str">'NFKC'</span>, text)
+
+    <span class="kw">return</span> text.<span class="fn">strip</span>()
+
+<span class="cm"># Apply across all loaded documents</span>
+<span class="kw">for</span> doc <span class="kw">in</span> docs:
+    doc.page_content = <span class="fn">clean_text</span>(doc.page_content)
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     CHUNKING
+═══════════════════════════════════════════ -->
+<div class="page" id="page-chunking">
+  <div class="page-header">
+    <div class="step-label">STEP 04</div>
+    <h2>Chunking</h2>
+    <p>Split documents into segments. Chunk size is the most impactful hyperparameter — too small loses context, too large hurts precision.</p>
+  </div>
+  <div class="page-body">
+    <div class="section-title">Interactive Chunking Demo</div>
+    <div class="section-sub">Switch strategies and adjust sliders to see how the same text is split differently.</div>
+
+    <div class="chunk-demo-box">
+      <!-- window bar -->
+      <div class="chunk-window-bar">
+        <div class="traffic-dot td-red"></div>
+        <div class="traffic-dot td-yellow"></div>
+        <div class="traffic-dot td-green"></div>
+        <div class="window-label" id="chunkWindowLabel">interactive_chunking_demo</div>
+      </div>
+      <!-- strategy tabs -->
+      <div class="chunk-strategy-tabs">
+        <button class="cs-tab" onclick="setStrategy('fixed',this)">Fixed Size (50 chars)</button>
+        <button class="cs-tab" onclick="setStrategy('sliding',this)">Sliding Window (overlap)</button>
+        <button class="cs-tab active" onclick="setStrategy('recursive',this)">Recursive ⭐</button>
+        <button class="cs-tab" onclick="setStrategy('semantic',this)">Semantic</button>
+      </div>
+      <!-- sliders (shown for fixed & sliding) -->
+      <div id="chunkSliders" style="display:none">
+        <div class="chunk-slider-row">
+          <span class="csr-label">Chunk size</span>
+          <input type="range" min="30" max="130" value="60" id="sliderSize" oninput="reChunk()">
+          <span class="csr-val" id="sliderSizeVal">60 chars</span>
+        </div>
+        <div class="chunk-slider-row" id="overlapRow" style="display:none">
+          <span class="csr-label">Overlap</span>
+          <input type="range" min="0" max="40" value="15" id="sliderOverlap" oninput="reChunk()">
+          <span class="csr-val" id="sliderOverlapVal">15 chars</span>
+        </div>
+      </div>
+      <!-- text display -->
+      <div class="chunk-text-area" id="chunkTextArea"></div>
+      <!-- footer -->
+      <div class="chunk-footer">
+        <div class="chunk-count" id="chunkCountLabel"></div>
+        <div class="chunk-tags" id="chunkTagsRow"></div>
+      </div>
+    </div>
+
+    <div class="cards-grid">
+      <div class="card"><div class="card-icon">📏</div><h4>Size Rules of Thumb</h4><p><strong style="color:var(--yellow)">128–256 tokens</strong> — precise factual retrieval<br><strong style="color:var(--orange)">512 tokens</strong> — balanced (most common)<br><strong style="color:var(--green)">1024+ tokens</strong> — long-form reasoning</p></div>
+      <div class="card"><div class="card-icon">🔁</div><h4>Overlap Strategy</h4><p>10–20% overlap prevents boundary artifacts where a key fact spans two chunks. Too much overlap → redundant retrieval results → wasted context window.</p></div>
+      <div class="card"><div class="card-icon">🌲</div><h4>Recursive Splitter</h4><p>Default choice. Tries separators in order: <code style="color:var(--teal)">["\n\n", "\n", ". ", " "]</code>. Respects paragraph → sentence → word hierarchy. Rarely splits mid-word.</p></div>
+    </div>
+
+    <div class="code-block">
+      <span class="cb-label">Python · RecursiveCharacterTextSplitter</span>
+<span class="kw">from</span> langchain.text_splitter <span class="kw">import</span> <span class="cls">RecursiveCharacterTextSplitter</span>
+
+splitter = <span class="cls">RecursiveCharacterTextSplitter</span>(
+    chunk_size=<span class="num">512</span>,
+    chunk_overlap=<span class="num">64</span>,
+    separators=[<span class="str">"\n\n"</span>, <span class="str">"\n"</span>, <span class="str">". "</span>, <span class="str">" "</span>, <span class="str">""</span>],
+    length_function=<span class="fn">len</span>,   <span class="cm"># swap for tiktoken for token-level splitting</span>
+)
+
+chunks = splitter.<span class="fn">split_documents</span>(docs)
+avg = <span class="fn">sum</span>(<span class="fn">len</span>(c.page_content) <span class="kw">for</span> c <span class="kw">in</span> chunks) // <span class="fn">len</span>(chunks)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"{len(chunks)} chunks created, avg {avg} chars each"</span>)
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     EMBEDDINGS
+═══════════════════════════════════════════ -->
+<div class="page" id="page-embeddings">
+  <div class="page-header">
+    <div class="step-label">STEP 05</div>
+    <h2>Embeddings</h2>
+    <p>Turn text into numbers that capture meaning. Similar meanings → similar numbers → we can search by meaning, not just keywords.</p>
+  </div>
+  <div class="page-body">
+    <div class="info-box">
+      <span class="ib-icon">🧮</span>
+      <div class="ib-text"><strong>What are embeddings?</strong> An embedding converts text into a list of numbers (a "vector"). The magic: texts with <strong>similar meaning</strong> get <strong>similar vectors</strong>. "Happy" and "Joyful" will be close together. "Happy" and "Refrigerator" will be far apart.</div>
+    </div>
+
+    <div class="section-title">2D Embedding Space — See How Meaning Maps to Position</div>
+    <div class="section-sub">Hover over dots to see their labels. Notice how related concepts cluster together.</div>
+
+    <div class="scatter-wrap">
+      <div class="scatter-canvas-wrap">
+        <canvas id="scatterCanvas" width="700" height="320"></canvas>
+        <div class="scatter-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div>HR Policy</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#14b8a6"></div>Tech Docs</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div>Finance</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#a855f7"></div>Query</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <span class="cb-label">Python · OpenAI Embeddings</span>
+<span class="kw">from</span> openai <span class="kw">import</span> <span class="cls">OpenAI</span>
+
+client = <span class="cls">OpenAI</span>(api_key=<span class="str">"your-api-key"</span>)
+
+<span class="kw">def</span> <span class="fn">get_embeddings</span>(texts):
+    <span class="str">"""Convert texts to embedding vectors using OpenAI"""</span>
+    response = client.embeddings.<span class="fn">create</span>(
+        model=<span class="str">"text-embedding-3-small"</span>,  <span class="cm"># fast, cheap, good</span>
+        input=texts
+    )
+    <span class="kw">return</span> [item.embedding <span class="kw">for</span> item <span class="kw">in</span> response.data]
+
+<span class="cm"># Embed all chunks</span>
+chunk_texts = [chunk[<span class="str">"content"</span>] <span class="kw">for</span> chunk <span class="kw">in</span> chunks]
+embeddings  = <span class="fn">get_embeddings</span>(chunk_texts)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Each vector has {len(embeddings[0])} dimensions"</span>)
+    </div>
+
+    <div class="metrics-row">
+      <div class="metric"><div class="metric-val">1536</div><div class="metric-label">Dimensions (3-small)</div></div>
+      <div class="metric"><div class="metric-val">~0.3ms</div><div class="metric-label">Embed Latency</div></div>
+      <div class="metric"><div class="metric-val">cosine</div><div class="metric-label">Similarity Metric</div></div>
+      <div class="metric"><div class="metric-val">batch</div><div class="metric-label">Best Strategy</div></div>
+    </div>
+
+    <div class="acc">
+      <div class="acc-header" onclick="toggleAcc(this)">🔢 So we turn text into numbers that capture meaning... <span class="acc-icon">▼</span></div>
+      <div class="acc-body">
+        <strong>Why high dimensions?</strong> 1536 numbers lets the model encode many independent semantic axes simultaneously — topic, sentiment, formality, domain, entity type, and more. Each dimension captures a different facet of meaning.<br><br>
+        <strong>Cosine similarity</strong> measures the angle between two vectors, ignoring magnitude. Two identical texts → similarity 1.0. Completely unrelated → similarity near 0. Opposites → negative similarity.<br><br>
+        <strong>Normalization matters</strong> — always normalize embeddings to unit length before storing, so cosine similarity equals dot product (much faster to compute at scale).
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     VECTOR STORE
+═══════════════════════════════════════════ -->
+<div class="page" id="page-vectorstore">
+  <div class="page-header">
+    <div class="step-label">STEP 06</div>
+    <h2>Vector Store</h2>
+    <p>A database optimized for approximate nearest-neighbor (ANN) search over dense vectors. Stores embeddings + metadata for filtered retrieval.</p>
+  </div>
+  <div class="page-body">
+    <div class="section-title">ChromaDB — Your Local Vector Store</div>
+    <div class="section-sub">Click "Store Chunks" to see embeddings fill the database, then "Query" to see retrieval in action.</div>
+
+    <div class="vstore-demo">
+      <div class="vstore-btns">
+        <button class="vs-btn primary" onclick="storeChunks()">🗃 Store Chunks</button>
+        <button class="vs-btn" onclick="queryStore()" id="queryBtn" style="opacity:0.4;pointer-events:none">🔍 Query</button>
+        <button class="vs-btn danger" onclick="resetStore()">⬜ Reset</button>
+      </div>
+      <div class="vector-grid" id="vectorGrid"></div>
+      <div class="vstore-result" id="vstoreResult"></div>
+    </div>
+
+    <div class="code-block">
+      <span class="cb-label">Python · ChromaDB</span>
+<span class="kw">import</span> chromadb
+
+<span class="cm"># Create a local ChromaDB instance</span>
+client = chromadb.<span class="cls">Client</span>()
+collection = client.<span class="fn">create_collection</span>(name=<span class="str">"document_rag"</span>)
+
+<span class="cm"># Store all chunks with their embeddings and metadata</span>
+collection.<span class="fn">add</span>(
+    documents=[c[<span class="str">"content"</span>]   <span class="kw">for</span> c <span class="kw">in</span> chunks],
+    embeddings=[c[<span class="str">"embedding"</span>] <span class="kw">for</span> c <span class="kw">in</span> chunks],
+    metadatas= [c[<span class="str">"metadata"</span>]  <span class="kw">for</span> c <span class="kw">in</span> chunks],
+    ids=[<span class="fn">f</span><span class="str">"chunk_{i}"</span> <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(chunks))]
+)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Stored {collection.count()} chunks in ChromaDB ✅"</span>)
+    </div>
+
+    <div class="cards-grid">
+      <div class="card"><div class="card-icon">🔵</div><h4>Pinecone</h4><p>Fully managed, serverless. Real-time upserts, hybrid search, metadata filters. Best for production with no infra overhead.</p></div>
+      <div class="card"><div class="card-icon">🟢</div><h4>Qdrant</h4><p>Rust-based, blazing fast, rich payload filtering. Best self-hosted option for teams with Kubernetes. Open source.</p></div>
+      <div class="card"><div class="card-icon">🐘</div><h4>pgvector</h4><p>Vector extension for PostgreSQL. No new infra if you already run Postgres. HNSW index or exact search. Relational joins work.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     RETRIEVAL
+═══════════════════════════════════════════ -->
+<div class="page" id="page-retrieval">
+  <div class="page-header">
+    <div class="step-label">STEP 07</div>
+    <h2>Retrieval</h2>
+    <p>Now the magic — given a question, find the most relevant chunks from your vector store using cosine similarity.</p>
+  </div>
+  <div class="page-body">
+
+    <div class="section-title">Cosine Similarity — How "Closeness" Works</div>
+    <div class="section-sub">Two vectors pointing in similar directions = high similarity. Click buttons to see different angles.</div>
+
+    <div class="cosine-demo">
+      <div class="cosine-canvas-wrap">
+        <canvas id="cosineCanvas" width="500" height="220"></canvas>
+      </div>
+      <div class="cosine-score-label" id="cosineScoreLabel" style="color:var(--orange)">Similarity: 0.72 — Somewhat Similar</div>
+      <div class="cosine-btns">
+        <button class="cos-btn" onclick="setCosine(0.97,'High',this)">High (0.97)</button>
+        <button class="cos-btn active" onclick="setCosine(0.72,'Medium',this)">Medium (0.72)</button>
+        <button class="cos-btn" onclick="setCosine(0.25,'Low',this)">Low (0.25)</button>
+        <button class="cos-btn" onclick="setCosine(-0.95,'Opposite',this)">Opposite (-0.95)</button>
+      </div>
+    </div>
+
+    <div class="section-title">Try It — Ask a Question, See Retrieval in Action</div>
+    <div class="section-sub">Type a question and click Retrieve to see ranked results with similarity scores.</div>
+
+    <div class="retrieval-demo">
+      <div class="retrieval-input-row">
+        <input class="retrieval-input" id="retrievalQuery" type="text" value="What is the leave policy?" placeholder="Ask a question...">
+        <button class="retrieve-btn" onclick="doRetrieval()">🔍 Retrieve</button>
+      </div>
+      <div class="retrieval-results" id="retrievalResults"></div>
+    </div>
+
+    <div class="cards-grid">
+      <div class="card"><div class="card-icon">🔀</div><h4>Hybrid Search</h4><p>Combine dense vector similarity (semantic) with BM25 sparse keyword matching. Reciprocal Rank Fusion merges scores. Outperforms either alone on rare proper nouns.</p></div>
+      <div class="card"><div class="card-icon">🏅</div><h4>Reranking</h4><p>Use a cross-encoder (Cohere Rerank, BGE-Reranker) on top-k results. Far more accurate than bi-encoder similarity. Adds ~100ms latency — worth it.</p></div>
+      <div class="card"><div class="card-icon">🪄</div><h4>HyDE</h4><p>Hypothetical Document Embeddings — ask LLM to generate a fake answer, embed it, use that embedding for retrieval. Closes the query-document distribution gap.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     GENERATION
+═══════════════════════════════════════════ -->
+<div class="page" id="page-generation">
+  <div class="page-header">
+    <div class="step-label">STEP 08</div>
+    <h2>Generation</h2>
+    <p>Assemble retrieved context into a structured prompt and pass to the LLM. The model synthesizes a grounded, citable answer.</p>
+  </div>
+  <div class="page-body">
+
+    <div class="section-title">How the Prompt is Built</div>
+    <div class="section-sub">Click "Build Prompt Step by Step" to see each part appear.</div>
+
+    <div class="prompt-demo">
+      <button class="build-prompt-btn" id="buildPromptBtn" onclick="buildPrompt()">🔨 Build Prompt Step by Step</button>
+
+      <div class="prompt-section" id="ps1" style="display:none">
+        <div class="prompt-section-label ps-system">SYSTEM MESSAGE</div>
+        <div class="prompt-content show">You are a helpful assistant. Answer questions <strong>ONLY</strong> based on the provided context. If the answer is not in the context, say "I don't have enough information to answer this."</div>
+      </div>
+
+      <div class="prompt-section" id="ps2" style="display:none">
+        <div class="prompt-section-label ps-context">CONTEXT (RETRIEVED CHUNKS)</div>
+        <div class="prompt-content show">
+          <div class="ctx-chunk c0">[1] The company's leave policy allows 24 paid leaves per year. Employees can carry forward up to 5 unused leaves.</div>
+          <div class="ctx-chunk c1">[2] Sick leave is separate from paid leave. Employees get 12 sick leaves annually. Medical certificate required for 3+ consecutive days.</div>
+          <div class="ctx-chunk c2">[3] Leave requests must be submitted 3 business days in advance through the HR portal. Emergency leaves require manager approval.</div>
+        </div>
+      </div>
+
+      <div class="prompt-section" id="ps3" style="display:none">
+        <div class="prompt-section-label ps-question">USER QUESTION</div>
+        <div class="prompt-content show">What is the leave policy? How many leaves do I get?</div>
+      </div>
+    </div>
+
+    <div class="section-title">LLM Response</div>
+    <div class="section-sub">With temperature=0 the model answers faithfully from the injected context only.</div>
+
+    <div class="llm-answer-box">
+      <div class="llm-header">
+        <div class="llm-tag">✅ GPT-4o-mini</div>
+        <div class="llm-model">gpt-4o-mini-2024-07-18</div>
+        <div class="llm-temp">temperature=0</div>
+      </div>
+      <div class="llm-answer">
+        Based on the provided context, here is the leave policy:<br><br>
+        You receive <span class="hl">24 paid leaves per year</span>, and up to 5 unused leaves can be carried forward. In addition, you get <span class="hl">12 sick leaves annually</span>, which are separate from paid leave. Sick leave for 3 or more consecutive days requires a medical certificate.<br><br>
+        Leave requests must be submitted <span class="hl">at least 3 business days in advance</span> through the HR portal. Emergency leaves require direct manager approval.<span class="cursor"></span>
+      </div>
+      <div class="llm-citations">📎 Sources: hr_policy.pdf (p.12, p.13, p.14)</div>
+    </div>
+
+    <div class="code-block">
+      <span class="cb-label">Python · Full RAG Chain</span>
+<span class="kw">from</span> langchain_core.prompts  <span class="kw">import</span> <span class="cls">ChatPromptTemplate</span>
+<span class="kw">from</span> langchain_openai         <span class="kw">import</span> <span class="cls">ChatOpenAI</span>
+<span class="kw">from</span> langchain_core.runnables <span class="kw">import</span> RunnablePassthrough
+
+PROMPT = <span class="cls">ChatPromptTemplate</span>.<span class="fn">from_template</span>(<span class="str">"""
+You are a helpful assistant. Answer ONLY from the context below.
+If the answer isn't there, say "I don't have that information."
+
+Context:
+{context}
+
+Question: {question}
+Answer (cite sources):
+"""</span>)
+
+llm = <span class="cls">ChatOpenAI</span>(model=<span class="str">"gpt-4o-mini"</span>, temperature=<span class="num">0</span>)
+
+<span class="kw">def</span> <span class="fn">format_docs</span>(docs):
+    <span class="kw">return</span> <span class="str">"\n\n"</span>.<span class="fn">join</span>(
+        <span class="fn">f</span><span class="str">"[{d.metadata['source']} p.{d.metadata.get('page','')}]\n{d.page_content}"</span>
+        <span class="kw">for</span> d <span class="kw">in</span> docs
+    )
+
+rag_chain = (
+    {<span class="str">"context"</span>: retriever | format_docs,
+     <span class="str">"question"</span>: RunnablePassthrough()}
+    | PROMPT | llm
+)
+
+answer = rag_chain.<span class="fn">invoke</span>(<span class="str">"What is the leave policy?"</span>)
+<span class="fn">print</span>(answer.content)
+    </div>
+
+    <div class="metrics-row">
+      <div class="metric"><div class="metric-val" style="font-size:1.4rem">RAGAS</div><div class="metric-label">Eval Framework</div></div>
+      <div class="metric"><div class="metric-val">0.92</div><div class="metric-label">Faithfulness</div></div>
+      <div class="metric"><div class="metric-val">0.87</div><div class="metric-label">Answer Relevancy</div></div>
+      <div class="metric"><div class="metric-val">0.79</div><div class="metric-label">Context Recall</div></div>
+    </div>
+
+    <div class="acc">
+      <div class="acc-header" onclick="toggleAcc(this)">🚀 Advanced patterns to explore next <span class="acc-icon">▼</span></div>
+      <div class="acc-body">
+        <strong>Corrective RAG (CRAG)</strong> — if retrieved docs score low, fall back to web search or broader retrieval before generating.<br><br>
+        <strong>Self-RAG</strong> — the LLM decides whether to retrieve, critiques its own citations, and loops back to re-retrieve if needed.<br><br>
+        <strong>Agentic RAG</strong> — wrap retrieval as a tool in a ReAct agent. Multi-step reasoning with dynamic retrieval per reasoning step.<br><br>
+        <strong>Graph RAG</strong> — build a knowledge graph from documents. Graph traversal finds related concepts that vector similarity misses.
+      </div>
+    </div>
+
+    <div style="height:2rem"></div>
+  </div>
+</div>
+
+</main>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// ─────────────────────────────────────────
+// NAV & PAGE ROUTING
+// ─────────────────────────────────────────
+const PAGES = ['home','whatisrag','loading','preprocessing','chunking','embeddings','vectorstore','retrieval','generation'];
+const PROGRESS_MAP = { home:11, whatisrag:22, loading:33, preprocessing:44, chunking:55, embeddings:66, vectorstore:77, retrieval:88, generation:100 };
+
+function goTo(id) {
+  PAGES.forEach(p => {
+    document.getElementById('page-'+p)?.classList.remove('active');
+  });
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  const page = document.getElementById('page-'+id);
+  if (page) { page.classList.add('active'); page.scrollIntoView({behavior:'smooth',block:'start'}); }
+  document.querySelectorAll(`.nav-link[data-page="${id}"]`).forEach(l => l.classList.add('active'));
+  document.getElementById('navProgress').style.width = (PROGRESS_MAP[id]||11) + '%';
+  if (id === 'embeddings') initScatter();
+  if (id === 'retrieval') { drawCosine(0.72); initRetrieval(); }
+  if (id === 'vectorstore') initVectorGrid();
+}
+
+document.querySelectorAll('.nav-link').forEach(l => {
+  l.addEventListener('click', () => goTo(l.dataset.page));
+});
+document.querySelectorAll('.step-pill').forEach(p => {
+  p.addEventListener('click', () => goTo(p.dataset.page));
+});
+
+// ─────────────────────────────────────────
+// ACCORDION
+// ─────────────────────────────────────────
+function toggleAcc(header) {
+  header.classList.toggle('open');
+  header.nextElementSibling.classList.toggle('open');
+}
+
+// ─────────────────────────────────────────
+// CHUNKING DEMO
+// ─────────────────────────────────────────
+const SAMPLE = "The company provides 24 paid leaves per year to all full-time employees. Sick leave is separate and includes 12 days annually. Leave requests must be submitted at least 3 business days in advance through the HR portal. Emergency leaves require immediate manager approval via email or phone. Unused paid leaves can be carried forward to a maximum of 5 days into the next calendar year.";
+
+const CK_COLORS = ['var(--chunk1)','var(--chunk2)','var(--chunk3)','var(--chunk4)','var(--chunk5)'];
+const CK_BG = ['rgba(249,115,22,0.15)','rgba(168,85,247,0.12)','rgba(34,197,94,0.1)','rgba(59,130,246,0.12)','rgba(236,72,153,0.1)'];
+let currentStrategy = 'recursive';
+
+function setStrategy(s, btn) {
+  currentStrategy = s;
+  document.querySelectorAll('.cs-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  const sliders = document.getElementById('chunkSliders');
+  const overlapRow = document.getElementById('overlapRow');
+  if (s === 'fixed') { sliders.style.display=''; overlapRow.style.display='none'; }
+  else if (s === 'sliding') { sliders.style.display=''; overlapRow.style.display=''; }
+  else { sliders.style.display='none'; }
+  reChunk();
+}
+
+function reChunk() {
+  const size = parseInt(document.getElementById('sliderSize').value);
+  const overlap = parseInt(document.getElementById('sliderOverlap').value);
+  document.getElementById('sliderSizeVal').textContent = size + ' chars';
+  document.getElementById('sliderOverlapVal').textContent = overlap + ' chars';
+  let chunks = [];
+  if (currentStrategy === 'fixed') {
+    for (let i=0; i<SAMPLE.length; i+=size) chunks.push(SAMPLE.slice(i,i+size));
+  } else if (currentStrategy === 'sliding') {
+    const step = Math.max(1, size - overlap);
+    for (let i=0; i<SAMPLE.length; i+=step) {
+      chunks.push(SAMPLE.slice(i,i+size));
+      if (i+size >= SAMPLE.length) break;
+    }
+  } else if (currentStrategy === 'recursive') {
+    const sents = SAMPLE.match(/[^.!?]+[.!?]+\s*/g) || [SAMPLE];
+    let cur = '';
+    sents.forEach(s => {
+      if ((cur+s).length > 110 && cur) { chunks.push(cur.trim()); cur = s; }
+      else cur += s;
+    });
+    if (cur.trim()) chunks.push(cur.trim());
+  } else {
+    // semantic — group by sentence
+    const sents = SAMPLE.match(/[^.!?]+[.!?]+\s*/g) || [SAMPLE];
+    sents.forEach(s => chunks.push(s.trim()));
+  }
+  renderChunks(chunks);
+}
+
+function esc(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function renderChunks(chunks) {
+  const area = document.getElementById('chunkTextArea');
+  const tags = document.getElementById('chunkTagsRow');
+  const count = document.getElementById('chunkCountLabel');
+  area.innerHTML = chunks.map((ch,i) => {
+    const c = i % 5;
+    return `<span class="ck ck${c}" title="Chunk ${i+1} · ${ch.length} chars">${esc(ch)}</span>`;
+  }).join(' ');
+  count.innerHTML = `<span>${chunks.length} chunks</span> <span style="color:var(--text-muted)">created using ${currentStrategy} · avg ${Math.round(chunks.reduce((a,c)=>a+c.length,0)/chunks.length)} chars</span>`;
+  tags.innerHTML = chunks.slice(0,5).map((ch,i) => {
+    const c=i%5;
+    return `<div class="ck-tag" style="color:${CK_COLORS[c]};border-color:${CK_COLORS[c].replace('var(--chunk','rgba(').replace(')',',0.35)')};background:${CK_BG[c]}">chunk_${i+1} · ${ch.length}c</div>`;
+  }).join('') + (chunks.length>5?`<div class="ck-tag" style="color:var(--text-dim);border-color:var(--border);background:transparent">+${chunks.length-5} more</div>`:'');
+}
+
+// Init chunking
+reChunk();
+
+// ─────────────────────────────────────────
+// SCATTER PLOT (Embeddings)
+// ─────────────────────────────────────────
+const SCATTER_POINTS = [
+  // HR Policy (orange)
+  { x:0.18, y:0.35, label:"Leave policy", color:"#f97316", r:7 },
+  { x:0.22, y:0.28, label:"Sick days",    color:"#f97316", r:7 },
+  { x:0.14, y:0.42, label:"Annual leave", color:"#f97316", r:7 },
+  { x:0.25, y:0.38, label:"HR portal",    color:"#f97316", r:6 },
+  { x:0.19, y:0.22, label:"Emergency leave", color:"#f97316", r:6 },
+  // Tech Docs (teal)
+  { x:0.62, y:0.22, label:"API reference",  color:"#14b8a6", r:7 },
+  { x:0.70, y:0.18, label:"SDK install",    color:"#14b8a6", r:7 },
+  { x:0.66, y:0.30, label:"Code examples",  color:"#14b8a6", r:7 },
+  { x:0.75, y:0.25, label:"Changelog",      color:"#14b8a6", r:6 },
+  // Finance (green)
+  { x:0.55, y:0.70, label:"Q3 revenue",   color:"#22c55e", r:7 },
+  { x:0.62, y:0.65, label:"Budget 2024",  color:"#22c55e", r:7 },
+  { x:0.50, y:0.75, label:"P&L report",   color:"#22c55e", r:6 },
+  { x:0.67, y:0.72, label:"Expenses",     color:"#22c55e", r:6 },
+  // Query (purple)
+  { x:0.20, y:0.31, label:"❓ How many sick days?", color:"#a855f7", r:10, isQuery:true },
+];
+
+let scatterInitialized = false;
+function initScatter() {
+  if (scatterInitialized) return;
+  scatterInitialized = true;
+  const canvas = document.getElementById('scatterCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const tooltip = document.getElementById('tooltip');
+
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d0d0d';
+    ctx.fillRect(0,0,W,H);
+    // Axis labels
+    ctx.fillStyle='#333';
+    ctx.font='11px JetBrains Mono,monospace';
+    ctx.fillText('↑ Dimension 2',8,16);
+    ctx.fillText('Dimension 1 →',W-100,H-6);
+
+    SCATTER_POINTS.forEach(p => {
+      const px = p.x * (W-40) + 20;
+      const py = (1-p.y) * (H-40) + 20;
+      ctx.beginPath();
+      ctx.arc(px,py,p.r,0,Math.PI*2);
+      ctx.fillStyle = p.isQuery ? p.color : p.color+'99';
+      ctx.fill();
+      if (p.isQuery) {
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    });
+  }
+
+  draw();
+
+  canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (canvas.width/rect.width);
+    const my = (e.clientY - rect.top) * (canvas.height/rect.height);
+    let found = null;
+    SCATTER_POINTS.forEach(p => {
+      const px = p.x*(W-40)+20, py=(1-p.y)*(H-40)+20;
+      if (Math.hypot(mx-px,my-py) < p.r+4) found = { ...p, px, py };
+    });
+    if (found) {
+      tooltip.style.display='block';
+      tooltip.style.left = (e.clientX+12)+'px';
+      tooltip.style.top  = (e.clientY-24)+'px';
+      tooltip.textContent = found.label;
+    } else {
+      tooltip.style.display='none';
+    }
+  });
+  canvas.addEventListener('mouseleave', () => { tooltip.style.display='none'; });
+}
+
+// ─────────────────────────────────────────
+// VECTOR STORE GRID
+// ─────────────────────────────────────────
+let storedCells = [];
+function initVectorGrid() {
+  const grid = document.getElementById('vectorGrid');
+  if (!grid) return;
+  grid.innerHTML='';
+  storedCells=[];
+  for (let i=0;i<48;i++) {
+    const cell = document.createElement('div');
+    cell.className='vg-cell';
+    cell.textContent=String(i).padStart(2,'0');
+    grid.appendChild(cell);
+    storedCells.push(cell);
+  }
+  document.getElementById('vstoreResult').classList.remove('show');
+  document.getElementById('queryBtn').style.opacity='0.4';
+  document.getElementById('queryBtn').style.pointerEvents='none';
+}
+
+function storeChunks() {
+  let i=0;
+  const cells = storedCells;
+  function next() {
+    if (i>=cells.length) {
+      document.getElementById('queryBtn').style.opacity='1';
+      document.getElementById('queryBtn').style.pointerEvents='auto';
+      return;
+    }
+    cells[i].classList.add('filled');
+    i++;
+    setTimeout(next, 40);
+  }
+  next();
+}
+
+function queryStore() {
+  const matched = [3,7,15];
+  storedCells.forEach(c => c.classList.remove('matched'));
+  matched.forEach(idx => { if(storedCells[idx]) storedCells[idx].classList.add('matched'); });
+  const res = document.getElementById('vstoreResult');
+  res.textContent = '✅ Found 3 matching chunks (cosine similarity > 0.85)';
+  res.classList.add('show');
+}
+
+function resetStore() {
+  storedCells.forEach(c => { c.classList.remove('filled','matched'); });
+  document.getElementById('vstoreResult').classList.remove('show');
+  document.getElementById('queryBtn').style.opacity='0.4';
+  document.getElementById('queryBtn').style.pointerEvents='none';
+}
+
+// ─────────────────────────────────────────
+// COSINE SIMILARITY CANVAS
+// ─────────────────────────────────────────
+let cosineAngle = Math.acos(0.72);
+function drawCosine(sim) {
+  const canvas = document.getElementById('cosineCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  const cx=W/2, cy=H/2+10;
+  const R=85;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#0d0d0d'; ctx.fillRect(0,0,W,H);
+
+  const angle = Math.acos(Math.max(-1,Math.min(1,sim)));
+
+  // Draw arc
+  ctx.beginPath();
+  ctx.arc(cx,cy,30,-(Math.PI/2),-(Math.PI/2)+angle,false);
+  ctx.strokeStyle='#333'; ctx.lineWidth=1.5; ctx.stroke();
+
+  // Base vector (teal) — always points right-ish
+  const baseAngle = -Math.PI/6;
+  const bx = cx + R*Math.cos(baseAngle), by = cy + R*Math.sin(baseAngle);
+  ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(bx,by);
+  ctx.strokeStyle='#14b8a6'; ctx.lineWidth=2.5; ctx.stroke();
+  drawArrow(ctx,cx,cy,bx,by,'#14b8a6');
+
+  // Query vector (orange)
+  const queryAngle = baseAngle - angle;
+  const qx = cx + R*Math.cos(queryAngle), qy = cy + R*Math.sin(queryAngle);
+  ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(qx,qy);
+  ctx.strokeStyle='#f97316'; ctx.lineWidth=2.5; ctx.stroke();
+  drawArrow(ctx,cx,cy,qx,qy,'#f97316');
+
+  // Labels
+  ctx.font='11px Inter,sans-serif'; ctx.fillStyle='#14b8a6';
+  ctx.fillText('document chunk',bx+8,by+4);
+  ctx.fillStyle='#f97316';
+  ctx.fillText('query vector',qx+8,qy-6);
+
+  // Similarity label on canvas
+  const lcolor = sim>0.8?'#22c55e':sim>0.5?'#f97316':sim>0?'#eab308':'#ef4444';
+  const label = sim>0.8?'Very Similar':sim>0.5?'Somewhat Similar':sim>0?'Weakly Similar':'Opposite';
+  document.getElementById('cosineScoreLabel').style.color=lcolor;
+  document.getElementById('cosineScoreLabel').textContent=`Similarity: ${sim.toFixed(2)} — ${label}`;
+}
+
+function drawArrow(ctx,x1,y1,x2,y2,color) {
+  const angle=Math.atan2(y2-y1,x2-x1), size=8;
+  ctx.fillStyle=color;
+  ctx.beginPath();
+  ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-size*Math.cos(angle-0.4),y2-size*Math.sin(angle-0.4));
+  ctx.lineTo(x2-size*Math.cos(angle+0.4),y2-size*Math.sin(angle+0.4));
+  ctx.closePath(); ctx.fill();
+}
+
+let activeCosBtn = null;
+function setCosine(val,label,btn) {
+  document.querySelectorAll('.cos-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  drawCosine(val);
+}
+
+function initRetrieval() {
+  drawCosine(0.72);
+  document.querySelectorAll('.cos-btn').forEach((b,i)=>b.classList.toggle('active',i===1));
+}
+
+// ─────────────────────────────────────────
+// RETRIEVAL DEMO
+// ─────────────────────────────────────────
+const RETRIEVAL_DB = [
+  { text:"The company provides 24 paid leaves per year to all full-time employees. Unused leaves can be carried forward to 5 days.", source:"hr_policy.pdf, p.12", scores:{"leave policy":0.94,"sick days":0.71,"hr portal":0.80} },
+  { text:"Sick leave is separate from paid leave. Employees get 12 sick leaves annually. Medical certificate required for 3+ consecutive days.", source:"hr_policy.pdf, p.13", scores:{"leave policy":0.87,"sick days":0.96,"hr portal":0.55} },
+  { text:"Leave requests must be submitted 3 business days in advance through the HR portal. Emergency leaves require manager approval.", source:"hr_policy.pdf, p.14", scores:{"leave policy":0.79,"sick days":0.52,"hr portal":0.93} },
+  { text:"The onboarding process takes 2 weeks and includes department orientation and system access setup.", source:"onboarding.pdf, p.2", scores:{"leave policy":0.31,"sick days":0.28,"hr portal":0.42} },
+];
+
+function getScore(doc, query) {
+  const q = query.toLowerCase();
+  for (const key of Object.keys(doc.scores)) {
+    if (q.includes(key)) return doc.scores[key];
+  }
+  return Math.random()*0.3+0.2;
+}
+
+function doRetrieval() {
+  const query = document.getElementById('retrievalQuery').value.trim();
+  const container = document.getElementById('retrievalResults');
+  container.innerHTML='<div style="font-size:0.75rem;color:var(--text-muted);font-family:JetBrains Mono,monospace;margin-bottom:0.8rem">Searching vector store...</div>';
+
+  const scored = RETRIEVAL_DB.map(d => ({ ...d, score: getScore(d, query) }))
+    .sort((a,b)=>b.score-a.score).slice(0,3);
+
+  setTimeout(() => {
+    container.innerHTML='';
+    scored.forEach((d,i) => {
+      const scoreColor = d.score>0.85?'var(--green)':d.score>0.6?'var(--orange)':'var(--text-muted)';
+      const item = document.createElement('div');
+      item.className='rr-item';
+      item.innerHTML=`
+        <div class="rr-rank">RANK #${i+1}</div>
+        <div class="rr-body">
+          <div class="rr-text">${d.text}</div>
+          <div class="rr-source">📄 ${d.source}</div>
+        </div>
+        <div class="rr-score" style="color:${scoreColor};border-color:${scoreColor}">Similarity: ${d.score.toFixed(2)}</div>
+      `;
+      container.appendChild(item);
+      setTimeout(()=>item.classList.add('show'), i*120);
+    });
+  }, 500);
+}
+
+// ─────────────────────────────────────────
+// PROMPT BUILDER
+// ─────────────────────────────────────────
+let promptStep = 0;
+function buildPrompt() {
+  promptStep++;
+  const steps = ['ps1','ps2','ps3'];
+  if (promptStep <= steps.length) {
+    document.getElementById(steps[promptStep-1]).style.display='';
+    if (promptStep >= steps.length) {
+      document.getElementById('buildPromptBtn').textContent='✅ Prompt Complete';
+      document.getElementById('buildPromptBtn').style.opacity='0.5';
+      document.getElementById('buildPromptBtn').style.pointerEvents='none';
+    }
+  }
+}
+</script>
+</body>
+</html>
