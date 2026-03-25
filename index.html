@@ -205,6 +205,100 @@ main {
   background: var(--orange-dim);
 }
 
+/* ─── Naive RAG Pipeline (Home) ─── */
+.naive-rag {
+  max-width: var(--content-max);
+  margin: 0 auto 2.2rem;
+  padding: 0 1.5rem;
+}
+.naive-rag-title {
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.25rem;
+}
+.naive-rag-sub {
+  font-size: 0.86rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+  font-weight: 400;
+}
+.naive-rag-steps {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  padding: 1.25rem 1.15rem;
+  margin-top: 1.1rem;
+}
+.naive-rag-steprow {
+  display: flex;
+  gap: 0.85rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.naive-step-card {
+  min-width: 120px;
+  max-width: 140px;
+  width: 140px;
+  height: 92px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 0.9rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.naive-step-card:hover {
+  border-color: #444;
+  transform: translateY(-1px);
+}
+.naive-step-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+.naive-step-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.2;
+}
+.naive-step-card.done {
+  border-color: rgba(34,197,94,0.45);
+  background: rgba(34,197,94,0.06);
+}
+.naive-step-card.done .naive-step-label {
+  color: var(--green);
+}
+.naive-step-card.current {
+  border-color: var(--orange);
+  background: rgba(249,115,22,0.08);
+}
+.naive-step-card.current .naive-step-label,
+.naive-step-card.current .naive-step-icon {
+  color: var(--orange);
+}
+.naive-rag-line {
+  height: 4px;
+  background: linear-gradient(90deg, var(--orange), rgba(34,197,94,0.75));
+  border-radius: 999px;
+  margin: 1.1rem 0 0.85rem;
+}
+.naive-rag-hint {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
 /* Problem/Solution cards */
 .problem-cards {
   display: grid;
@@ -986,6 +1080,372 @@ input[type=range]::-webkit-slider-thumb {
   white-space: nowrap;
   display: none;
 }
+
+/* ══════════════════════════════════════════
+   PREPROCESSING — Enhanced Styles
+══════════════════════════════════════════ */
+
+/* Pipeline diagram */
+.pp-pipeline {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 0.5rem 0 1.5rem;
+}
+.pp-pipeline::-webkit-scrollbar { display: none; }
+
+.pp-stage {
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  min-width: 110px;
+}
+.pp-stage:hover { border-color: #444; transform: translateY(-1px); }
+.pp-stage.active {
+  border-color: var(--orange);
+  background: rgba(249,115,22,0.06);
+}
+.pp-stage-icon { font-size: 1.3rem; margin-bottom: 0.35rem; }
+.pp-stage-name { font-size: 0.78rem; font-weight: 700; margin-bottom: 0.15rem; }
+.pp-stage-name .active & { color: var(--orange); }
+.pp-stage.active .pp-stage-name { color: var(--orange); }
+.pp-stage-desc { font-size: 0.62rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+.pp-arrow { flex-shrink: 0; padding: 0 0.4rem; color: var(--text-dim); font-size: 0.9rem; }
+
+/* Detail panels */
+.pp-detail-panel {
+  display: none;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  animation: fadeIn 0.3s ease;
+}
+.pp-detail-panel.active { display: block; }
+
+.pp-detail-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.pp-detail-icon { font-size: 1.6rem; flex-shrink: 0; margin-top: 0.1rem; }
+.pp-detail-title { font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 0.2rem; }
+.pp-detail-sub { font-size: 0.8rem; color: var(--text-muted); font-weight: 400; }
+
+.pp-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+}
+@media(max-width:720px) { .pp-two-col { grid-template-columns: 1fr; } }
+
+.pp-tag {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  margin-bottom: 0.8rem;
+}
+.pp-tag-orange { color: var(--orange); background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.25); }
+.pp-tag-red    { color: var(--red);    background: rgba(239,68,68,0.1);   border: 1px solid rgba(239,68,68,0.25); }
+.pp-tag-green  { color: var(--green);  background: rgba(34,197,94,0.1);   border: 1px solid rgba(34,197,94,0.25); }
+
+.pp-body-text { font-size: 0.82rem; color: var(--text-muted); line-height: 1.7; font-weight: 400; }
+
+.pp-checklist { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.8rem; }
+.pp-check { font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; }
+.pp-check.warn { color: #f59e0b; }
+.pp-check strong { color: var(--text); }
+
+/* Before/After demo */
+.pp-before-after {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 1.2rem;
+  margin-bottom: 1.2rem;
+}
+.pp-ba-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--text-muted);
+}
+.pp-ba-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+@media(max-width:640px) { .pp-ba-grid { grid-template-columns: 1fr; } }
+
+.pp-ba-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+.pp-ba-before { color: var(--red); }
+.pp-ba-after  { color: var(--green); }
+
+.pp-ba-box {
+  background: #0d0d0d;
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 0.8rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  line-height: 1.7;
+  color: #888;
+  min-height: 100px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.pp-ba-clean { color: var(--text-muted) !important; }
+
+.pp-clean-btn {
+  padding: 0.5rem 0.9rem;
+  background: var(--orange);
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: opacity 0.2s;
+}
+.pp-clean-btn:hover { opacity: 0.85; }
+
+.pp-changes-log {
+  margin-top: 1rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.pp-change-item {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--green);
+}
+
+/* Noise list */
+.pp-noise-list { display: flex; flex-direction: column; gap: 0.7rem; }
+.pp-noise-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.6rem 0.8rem;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.pp-noise-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.58rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 3px;
+  white-space: nowrap;
+  margin-top: 1px;
+}
+.pp-noise-badge.bad  { background: rgba(239,68,68,0.15); color: var(--red); }
+.pp-noise-badge.good { background: rgba(34,197,94,0.15);  color: var(--green); }
+.pp-noise-title { font-size: 0.78rem; font-weight: 600; margin-bottom: 0.15rem; }
+.pp-noise-eg { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-muted); }
+
+/* Dedup cards */
+.pp-dedup-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.pp-dedup-card {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 1.1rem;
+}
+.pp-dedup-method {
+  font-size: 0.88rem;
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+.pp-dedup-cost {
+  font-size: 0.68rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+.pp-dedup-desc { font-size: 0.77rem; color: var(--text-muted); line-height: 1.55; margin-bottom: 0; font-weight: 400; }
+
+/* Metadata grid */
+.pp-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.pp-meta-category {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 1rem;
+}
+.pp-meta-cat-header {
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-bottom: 0.7rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.pp-meta-field {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.3rem;
+  line-height: 1.5;
+}
+
+.inline-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+  color: var(--teal);
+  background: rgba(20,184,166,0.08);
+  padding: 0.05em 0.35em;
+  border-radius: 3px;
+}
+
+/* Metadata filter demo */
+.pp-filter-demo {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 1.2rem;
+  margin-top: 0.8rem;
+}
+.pp-filter-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.pp-filter-group { display: flex; flex-direction: column; gap: 0.3rem; }
+.pp-filter-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.pp-filter-select {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.78rem;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.pp-filter-select:focus { border-color: var(--orange); }
+
+.pp-filter-results { display: flex; flex-direction: column; gap: 0.4rem; }
+.pp-filter-doc {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.8rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  animation: fadeIn 0.25s ease;
+}
+.pp-filter-doc-name { font-size: 0.78rem; font-weight: 600; }
+.pp-filter-tags { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+.pp-filter-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 3px;
+  border: 1px solid;
+}
+.pp-filter-qs {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--green);
+}
+.pp-filter-empty {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  text-align: center;
+  padding: 0.8rem;
+}
+
+/* Quality checks */
+.pp-quality-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+.pp-qcheck {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  border: 1px solid;
+}
+.pp-qcheck.green  { background: rgba(34,197,94,0.05);  border-color: rgba(34,197,94,0.2); }
+.pp-qcheck.orange { background: rgba(249,115,22,0.05); border-color: rgba(249,115,22,0.2); }
+.pp-qcheck-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+.pp-qcheck.green  .pp-qcheck-icon { color: var(--green); }
+.pp-qcheck.orange .pp-qcheck-icon { color: var(--orange); }
+.pp-qcheck-title { font-size: 0.82rem; font-weight: 600; margin-bottom: 0.15rem; }
+.pp-qcheck-desc  { font-size: 0.76rem; color: var(--text-muted); line-height: 1.5; font-weight: 400; }
+
+/* Stats row */
+.pp-stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px,1fr));
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+.pp-stat {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 0.8rem;
+  text-align: center;
+}
+.pp-stat-val   { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.03em; }
+.pp-stat-label { font-size: 0.62rem; color: var(--text-muted); margin-top: 0.2rem; font-family: 'JetBrains Mono', monospace; }
 </style>
 </head>
 <body>
@@ -1028,34 +1488,76 @@ input[type=range]::-webkit-slider-thumb {
     </div>
   </div>
 
-  <div class="problem-cards">
-    <div class="p-card">
-      <div class="p-icon">🚫</div>
-      <h3>Problem 1: No Private Data</h3>
-      <p>GPT-4 was trained on public internet data. It knows nothing about your company docs, internal PDFs, or proprietary knowledge. Ask it about your <em>HR policy?</em> It'll guess — or worse, make something up.</p>
-    </div>
-    <div class="p-card">
-      <div class="p-icon">😵</div>
-      <h3>Problem 2: Hallucinations</h3>
-      <p>LLMs confidently generate false information. They don't "know" — they predict the next token. Without grounding in real data, they fabricate facts, dates, numbers, and quotes.</p>
-    </div>
-    <div class="p-card solution">
-      <div class="p-icon">✅</div>
-      <h3>Solution: RAG</h3>
-      <p>Retrieval-Augmented Generation — first <em>retrieve</em> relevant information from your documents, then <em>feed</em> it to the LLM as context. The LLM answers based on your actual data, not guesses.</p>
+  <div class="naive-rag">
+    <div class="naive-rag-title">The Naive RAG Pipeline</div>
+    <div class="naive-rag-sub">Every RAG system follows this flow. Today, we build each step from scratch.</div>
+
+    <div class="naive-rag-steps">
+      <div class="naive-rag-steprow">
+        <div class="naive-step-card done" data-index="0" data-page="loading" onclick="naiveStepClick(this)">
+          <div class="naive-step-icon">📄</div>
+          <div class="naive-step-label">Load Documents</div>
+        </div>
+        <div class="naive-step-card done" data-index="1" data-page="preprocessing" onclick="naiveStepClick(this)">
+          <div class="naive-step-icon">🧽</div>
+          <div class="naive-step-label">Clean Text</div>
+        </div>
+        <div class="naive-step-card done" data-index="2" data-page="chunking" onclick="naiveStepClick(this)">
+          <div class="naive-step-icon">✂️</div>
+          <div class="naive-step-label">Chunk Text</div>
+        </div>
+        <div class="naive-step-card done" data-index="3" data-page="embeddings" onclick="naiveStepClick(this)">
+          <div class="naive-step-icon">🔢</div>
+          <div class="naive-step-label">Embed Chunks</div>
+        </div>
+        <div class="naive-step-card current" data-index="4" data-page="vectorstore" onclick="naiveStepClick(this)">
+          <div class="naive-step-icon">🗄</div>
+          <div class="naive-step-label">Vector DB</div>
+        </div>
+        <div class="naive-step-card" data-index="5" data-page="retrieval" onclick="naiveStepClick(this)">
+          <div class="naive-step-icon">🔍</div>
+          <div class="naive-step-label">Retrieve</div>
+        </div>
+        <div class="naive-step-card" data-index="6" data-page="generation" onclick="naiveStepClick(this)">
+          <div class="naive-step-icon">📝</div>
+          <div class="naive-step-label">Build Prompt</div>
+        </div>
+        <div class="naive-step-card" data-index="7" data-page="generation" onclick="naiveStepClick(this)">
+          <div class="naive-step-icon">🤖</div>
+          <div class="naive-step-label">LLM</div>
+        </div>
+        <div class="naive-step-card" data-index="8" data-page="generation" onclick="naiveStepClick(this)">
+          <div class="naive-step-icon">✅</div>
+          <div class="naive-step-label">Answer</div>
+        </div>
+      </div>
+      <div class="naive-rag-line"></div>
+      <div class="naive-rag-hint">Click each step to jump + mark progress</div>
     </div>
   </div>
 
   <div class="page-body" style="padding-top:1rem">
-    <div class="section-title" style="font-size:1.3rem;margin-bottom:0.8rem">If you are going to ask a question related to your company from an LLM...</div>
+    <div class="section-title" style="font-size:1.3rem;margin-bottom:0.8rem">Use Cases</div>
     <div class="info-box">
       <span class="ib-icon">💡</span>
-      <div class="ib-text">RAG bridges the gap between a general-purpose language model and your specific knowledge base. Navigate through each step above to see exactly how it works — from loading raw documents all the way to generating grounded answers.</div>
+      <div class="ib-text">RAG is used anywhere you need answers grounded in your own documents. The pipeline below helps your agent retrieve the right evidence, then generate a traceable response.</div>
     </div>
     <div class="cards-grid">
-      <div class="card"><div class="card-icon">📐</div><h4>Two Phases</h4><p><strong style="color:var(--yellow)">Indexing</strong> (offline): load → preprocess → chunk → embed → store. <strong style="color:var(--green)">Querying</strong> (online): embed query → retrieve → augment → generate.</p></div>
-      <div class="card"><div class="card-icon">🎯</div><h4>Why Not Fine-Tune?</h4><p>Fine-tuning is expensive, slow to update, and still hallucinations-prone. RAG is cheaper, always up-to-date, and traceable — you can cite exactly which document answered the question.</p></div>
-      <div class="card"><div class="card-icon">⚡</div><h4>Production Ready</h4><p>RAG powers enterprise Q&A, customer support bots, code assistants, legal research tools, and medical knowledge bases at companies like Notion, Stripe, and Anthropic.</p></div>
+      <div class="card">
+        <div class="card-icon">📄</div>
+        <h4>Use Case: PDF Q&amp;A</h4>
+        <p>Upload a 200-page manual and ask questions. The system retrieves the exact chunks and answers with page-based context.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🧠</div>
+        <h4>Use Case: Knowledge Base</h4>
+        <p>Build an internal chatbot that answers from policies, handbooks, and runbooks—optionally filtered by department or document type.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">💬</div>
+        <h4>Use Case: Support Bot</h4>
+        <p>When customers ask about features or troubleshooting, retrieve relevant docs and generate a grounded, reliable response.</p>
+      </div>
     </div>
   </div>
 </div>
@@ -1163,45 +1665,535 @@ docs = loader.<span class="fn">load</span>()
 </div>
 
 <!-- ═══════════════════════════════════════════
-     PREPROCESSING
+     PREPROCESSING  (enhanced)
 ═══════════════════════════════════════════ -->
 <div class="page" id="page-preprocessing">
   <div class="page-header">
     <div class="step-label">STEP 03</div>
-    <h2>Preprocessing &amp; Cleaning</h2>
-    <p>Garbage in, garbage out. Cleaning raw text before chunking dramatically improves retrieval quality by removing noise (boilerplate, headers/footers, encoding issues), normalizing punctuation/whitespace, and enriching metadata so downstream steps can search and filter more precisely.</p>
+    <h2>Preprocessing &amp; Data Cleaning</h2>
+    <p>Garbage in, garbage out. Raw documents are messy — boilerplate headers, broken encoding, duplicates, inconsistent formatting. A thorough preprocessing pipeline transforms noisy text into clean, structured, metadata-rich chunks that dramatically improve retrieval quality downstream.</p>
   </div>
   <div class="page-body">
-    <div class="cards-grid">
-      <div class="card"><div class="card-icon">🧹</div><h4>Text Normalization</h4><p>Collapse multiple newlines, strip HTML tags, fix encoding, remove page headers/footers, normalize unicode characters and punctuation marks.</p></div>
-      <div class="card"><div class="card-icon">🏷</div><h4>Metadata Enrichment</h4><p>Add title, creation date, author, section heading, page number. This enables filtered retrieval: "only search Q3 reports from 2024" — no re-embedding needed.</p></div>
-      <div class="card"><div class="card-icon">🔗</div><h4>Deduplication</h4><p>Near-duplicate content wastes embedding budget and pollutes results with repetition. Use MinHash, SimHash, or cosine similarity on chunked text hashes.</p></div>
-      <div class="card"><div class="card-icon">🗂</div><h4>Document Classification</h4><p>Tag docs by type (legal, technical, FAQ) to enable routing to specialized embedding models or different retrieval pipelines per document class.</p></div>
+
+    <!-- ── Pipeline diagram ── -->
+    <div class="section-title">The Full Preprocessing Pipeline</div>
+    <div class="section-sub">Each stage runs in sequence. Click a stage to jump to its details below.</div>
+
+    <div class="pp-pipeline" id="ppPipeline">
+      <div class="pp-stage active" data-target="pp-extract" onclick="selectPPStage(this)">
+        <div class="pp-stage-icon">📥</div>
+        <div class="pp-stage-name">Extract</div>
+        <div class="pp-stage-desc">Raw text from files</div>
+      </div>
+      <div class="pp-arrow">→</div>
+      <div class="pp-stage" data-target="pp-normalize" onclick="selectPPStage(this)">
+        <div class="pp-stage-icon">🧹</div>
+        <div class="pp-stage-name">Normalize</div>
+        <div class="pp-stage-desc">Whitespace &amp; unicode</div>
+      </div>
+      <div class="pp-arrow">→</div>
+      <div class="pp-stage" data-target="pp-filter" onclick="selectPPStage(this)">
+        <div class="pp-stage-icon">🚫</div>
+        <div class="pp-stage-name">Filter</div>
+        <div class="pp-stage-desc">Boilerplate removal</div>
+      </div>
+      <div class="pp-arrow">→</div>
+      <div class="pp-stage" data-target="pp-dedup" onclick="selectPPStage(this)">
+        <div class="pp-stage-icon">🔁</div>
+        <div class="pp-stage-name">Deduplicate</div>
+        <div class="pp-stage-desc">Near-duplicate removal</div>
+      </div>
+      <div class="pp-arrow">→</div>
+      <div class="pp-stage" data-target="pp-metadata" onclick="selectPPStage(this)">
+        <div class="pp-stage-icon">🏷</div>
+        <div class="pp-stage-name">Metadata</div>
+        <div class="pp-stage-desc">Enrich &amp; classify</div>
+      </div>
+      <div class="pp-arrow">→</div>
+      <div class="pp-stage" data-target="pp-quality" onclick="selectPPStage(this)">
+        <div class="pp-stage-icon">✅</div>
+        <div class="pp-stage-name">Quality Gate</div>
+        <div class="pp-stage-desc">Validate &amp; log</div>
+      </div>
     </div>
 
-    <div class="code-block">
-      <span class="cb-label">Python · Cleaning</span>
+    <!-- ── Stage detail panels ── -->
+    <div class="pp-detail-panel active" id="pp-extract">
+      <div class="pp-detail-header">
+        <span class="pp-detail-icon">📥</span>
+        <div>
+          <div class="pp-detail-title">Stage 1 — Text Extraction</div>
+          <div class="pp-detail-sub">Pull raw text out of binary file formats into Python strings</div>
+        </div>
+      </div>
+      <div class="pp-two-col">
+        <div>
+          <div class="pp-tag pp-tag-orange">What happens here</div>
+          <p class="pp-body-text">File readers (PyMuPDF, pdfplumber, python-docx) convert binary formats to plain text strings. Each page or section becomes a separate <code class="inline-code">Document</code> object. The extraction step is where most information loss occurs if done carelessly.</p>
+          <div class="pp-checklist">
+            <div class="pp-check">✓ <strong>PDF text mode</strong> — reads embedded text, preserves order</div>
+            <div class="pp-check">✓ <strong>OCR fallback</strong> — for scanned/image PDFs (Tesseract)</div>
+            <div class="pp-check">✓ <strong>Table extraction</strong> — pdfplumber bbox or camelot</div>
+            <div class="pp-check warn">⚠ <strong>Multi-column PDFs</strong> — reading order often scrambled</div>
+            <div class="pp-check warn">⚠ <strong>Header/footer injection</strong> — leaks into every page</div>
+          </div>
+        </div>
+        <div class="code-block" style="margin-bottom:0">
+          <span class="cb-label">pdfplumber</span>
+<span class="kw">import</span> pdfplumber
+
+<span class="kw">def</span> <span class="fn">load_pdf</span>(file_path):
+    <span class="str">"""Load PDF and extract text page by page"""</span>
+    documents = []
+    <span class="kw">with</span> pdfplumber.<span class="fn">open</span>(file_path) <span class="kw">as</span> pdf:
+        <span class="kw">for</span> i, page <span class="kw">in</span> <span class="fn">enumerate</span>(pdf.pages):
+            text = page.<span class="fn">extract_text</span>()
+            <span class="kw">if</span> text:
+                documents.<span class="fn">append</span>({
+                  <span class="str">"content"</span>: text,
+                  <span class="str">"metadata"</span>: {
+                    <span class="str">"source"</span>: file_path,
+                    <span class="str">"page"</span>: i + <span class="num">1</span>
+                  }
+                })
+    <span class="kw">return</span> documents
+
+docs = <span class="fn">load_pdf</span>(<span class="str">"company_policy.pdf"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Loaded {len(docs)} pages"</span>)
+        </div>
+      </div>
+    </div>
+
+    <div class="pp-detail-panel" id="pp-normalize">
+      <div class="pp-detail-header">
+        <span class="pp-detail-icon">🧹</span>
+        <div>
+          <div class="pp-detail-title">Stage 2 — Text Normalization</div>
+          <div class="pp-detail-sub">Standardize whitespace, encoding, and character sets</div>
+        </div>
+      </div>
+
+      <!-- Interactive before/after demo -->
+      <div class="pp-before-after">
+        <div class="pp-ba-label">🎮 Interactive Demo — Click "Clean" to see normalization in action</div>
+        <div class="pp-ba-grid">
+          <div>
+            <div class="pp-ba-title pp-ba-before">BEFORE (raw extracted text)</div>
+            <div class="pp-ba-box" id="ppRawText">The  company   provides\n\n\n\n24 paid  leaves per year.\nSick leave  is  separate.\nPage 3 of 15\n\n\nEMPLOYEE  HANDBOOK  —  CONFIDENTIAL\n\n\u201cLeave requests\u201d must be submitted   via   the HR\u00a0portal.</div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:center;">
+            <button class="pp-clean-btn" onclick="runNormalize()">🧹 Clean →</button>
+          </div>
+          <div>
+            <div class="pp-ba-title pp-ba-after">AFTER (normalized)</div>
+            <div class="pp-ba-box pp-ba-clean" id="ppCleanText" style="color:var(--text-muted)">Click "Clean" to see result...</div>
+          </div>
+        </div>
+        <div class="pp-changes-log" id="ppChangesLog" style="display:none">
+          <div class="pp-change-item">✓ Collapsed 4 extra newlines → single paragraph break</div>
+          <div class="pp-change-item">✓ Removed "Page 3 of 15" boilerplate</div>
+          <div class="pp-change-item">✓ Removed "CONFIDENTIAL" watermark text</div>
+          <div class="pp-change-item">✓ Converted curly quotes " " → straight quotes " "</div>
+          <div class="pp-change-item">✓ Replaced non-breaking space (\u00a0) with regular space</div>
+          <div class="pp-change-item">✓ Collapsed 6 extra spaces → single spaces</div>
+          <div class="pp-change-item" style="color:var(--green)">Result: 23% fewer characters, consistent formatting ✅</div>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <span class="cb-label">Python · Full Normalization</span>
 <span class="kw">import</span> re, unicodedata
 
-<span class="kw">def</span> <span class="fn">clean_text</span>(text: <span class="cls">str</span>) -> <span class="cls">str</span>:
-    <span class="cm"># Collapse excessive whitespace and newlines</span>
-    text = re.<span class="fn">sub</span>(<span class="str">r'\n{3,}'</span>, <span class="str">'\n\n'</span>, text)
-    text = re.<span class="fn">sub</span>(<span class="str">r' {2,}'</span>, <span class="str">' '</span>,  text)
+<span class="kw">def</span> <span class="fn">normalize_text</span>(text: <span class="cls">str</span>) -> <span class="cls">str</span>:
+    <span class="cm"># 1. Normalize unicode — curly quotes, ligatures, non-breaking spaces</span>
+    text = unicodedata.<span class="fn">normalize</span>(<span class="str">"NFKC"</span>, text)
 
-    <span class="cm"># Strip common boilerplate patterns</span>
-    text = re.<span class="fn">sub</span>(<span class="str">r'Page \d+ of \d+'</span>, <span class="str">''</span>, text)
-    text = re.<span class="fn">sub</span>(<span class="str">r'CONFIDENTIAL|DRAFT'</span>, <span class="str">''</span>, text,
-                   flags=re.IGNORECASE)
+    <span class="cm"># 2. Remove page headers / footers (common patterns)</span>
+    text = re.<span class="fn">sub</span>(<span class="str">r"(?im)^page\s+\d+\s+(of\s+\d+)?\s*$"</span>, <span class="str">""</span>, text)
+    text = re.<span class="fn">sub</span>(<span class="str">r"(?i)(confidential|draft|internal only)"</span>, <span class="str">""</span>, text)
 
-    <span class="cm"># Normalize unicode (e.g. curly quotes → straight)</span>
-    text = unicodedata.<span class="fn">normalize</span>(<span class="str">'NFKC'</span>, text)
+    <span class="cm"># 3. Strip HTML tags if content was scraped</span>
+    text = re.<span class="fn">sub</span>(<span class="str">r"&lt;[^&gt;]+&gt;"</span>, <span class="str">" "</span>, text)
+    text = re.<span class="fn">sub</span>(<span class="str">r"&amp;[a-z]+;"</span>,  <span class="str">" "</span>, text)  <span class="cm"># &amp;amp; &amp;nbsp; etc.</span>
+
+    <span class="cm"># 4. Collapse whitespace</span>
+    text = re.<span class="fn">sub</span>(<span class="str">r"\n{3,}"</span>, <span class="str">"\n\n"</span>, text)
+    text = re.<span class="fn">sub</span>(<span class="str">r" {2,}"</span>,  <span class="str">" "</span>,    text)
+    text = re.<span class="fn">sub</span>(<span class="str">r"\t"</span>,      <span class="str">" "</span>,    text)
+
+    <span class="cm"># 5. Fix punctuation spacing</span>
+    text = re.<span class="fn">sub</span>(<span class="str">r"\s([.,;:!?])"</span>, <span class="str">r"\1"</span>, text)
 
     <span class="kw">return</span> text.<span class="fn">strip</span>()
-
-<span class="cm"># Apply across all loaded documents</span>
-<span class="kw">for</span> doc <span class="kw">in</span> docs:
-    doc.page_content = <span class="fn">clean_text</span>(doc.page_content)
+      </div>
     </div>
+
+    <div class="pp-detail-panel" id="pp-filter">
+      <div class="pp-detail-header">
+        <span class="pp-detail-icon">🚫</span>
+        <div>
+          <div class="pp-detail-title">Stage 3 — Boilerplate &amp; Noise Filtering</div>
+          <div class="pp-detail-sub">Remove content that adds noise to embeddings and retrieval</div>
+        </div>
+      </div>
+      <div class="pp-two-col">
+        <div>
+          <div class="pp-tag pp-tag-red">What to remove</div>
+          <div class="pp-noise-list">
+            <div class="pp-noise-item">
+              <div class="pp-noise-badge bad">BAD</div>
+              <div>
+                <div class="pp-noise-title">Navigation / Menu text</div>
+                <div class="pp-noise-eg">"Home | About | Products | Contact | Login"</div>
+              </div>
+            </div>
+            <div class="pp-noise-item">
+              <div class="pp-noise-badge bad">BAD</div>
+              <div>
+                <div class="pp-noise-title">Legal boilerplate</div>
+                <div class="pp-noise-eg">"All rights reserved. No part of this document may be reproduced..."</div>
+              </div>
+            </div>
+            <div class="pp-noise-item">
+              <div class="pp-noise-badge bad">BAD</div>
+              <div>
+                <div class="pp-noise-title">Repeated section headers</div>
+                <div class="pp-noise-eg">"Section 1 | Chapter 2 | Table of Contents" on every page</div>
+              </div>
+            </div>
+            <div class="pp-noise-item">
+              <div class="pp-noise-badge bad">BAD</div>
+              <div>
+                <div class="pp-noise-title">Timestamps / auto-generated IDs</div>
+                <div class="pp-noise-eg">"Generated: 2024-03-15 09:42:17 UTC · Doc ID: a3f2e9c1"</div>
+              </div>
+            </div>
+            <div class="pp-noise-item">
+              <div class="pp-noise-badge good">KEEP</div>
+              <div>
+                <div class="pp-noise-title">Section headings (meaningful)</div>
+                <div class="pp-noise-eg">"5.2 Leave Entitlement Policy" → signals topic context</div>
+              </div>
+            </div>
+            <div class="pp-noise-item">
+              <div class="pp-noise-badge good">KEEP</div>
+              <div>
+                <div class="pp-noise-title">Dates in context</div>
+                <div class="pp-noise-eg">"Policy updated January 2024" → useful for temporal filtering</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="code-block" style="margin-bottom:0">
+          <span class="cb-label">Python · Noise Filter</span>
+<span class="kw">BOILERPLATE_PATTERNS</span> = [
+    <span class="cm"># Navigation bars</span>
+    <span class="str">r"(?im)^(home|about|products?|contact|login|menu)\s*\|"</span>,
+    <span class="cm"># Copyright footers</span>
+    <span class="str">r"(?i)all rights reserved.*$"</span>,
+    <span class="cm"># Auto-generated timestamps</span>
+    <span class="str">r"Generated:\s+\d{4}-\d{2}-\d{2}"</span>,
+    <span class="cm"># Doc IDs</span>
+    <span class="str">r"Doc\s*ID:\s*[a-f0-9]+"</span>,
+    <span class="cm"># Table of contents lines</span>
+    <span class="str">r"(?im)^\s*\.{4,}\s*\d+\s*$"</span>,
+]
+
+<span class="kw">def</span> <span class="fn">filter_boilerplate</span>(text: <span class="cls">str</span>) -> <span class="cls">str</span>:
+    <span class="kw">for</span> pattern <span class="kw">in</span> BOILERPLATE_PATTERNS:
+        text = re.<span class="fn">sub</span>(pattern, <span class="str">""</span>, text)
+    <span class="kw">return</span> text
+
+<span class="cm"># Also drop docs that are too short after cleaning</span>
+docs = [d <span class="kw">for</span> d <span class="kw">in</span> docs
+        <span class="kw">if</span> <span class="fn">len</span>(d[<span class="str">"content"</span>].<span class="fn">split</span>()) >= <span class="num">20</span>]
+        </div>
+      </div>
+    </div>
+
+    <div class="pp-detail-panel" id="pp-dedup">
+      <div class="pp-detail-header">
+        <span class="pp-detail-icon">🔁</span>
+        <div>
+          <div class="pp-detail-title">Stage 4 — Deduplication</div>
+          <div class="pp-detail-sub">Identify and remove near-duplicate documents before embedding</div>
+        </div>
+      </div>
+      <p class="pp-body-text" style="margin-bottom:1.2rem">Duplicate content wastes embedding API budget and degrades retrieval — if the same paragraph appears in 10 documents, your top-k results will all be copies of the same text. Three approaches in increasing complexity:</p>
+
+      <div class="pp-dedup-cards">
+        <div class="pp-dedup-card">
+          <div class="pp-dedup-method">Exact Hash</div>
+          <div class="pp-dedup-cost">⚡ Cheapest</div>
+          <p class="pp-dedup-desc">MD5 or SHA256 of the full document text. O(n) scan. Catches only byte-for-byte duplicates. Great as a first pass.</p>
+          <div class="code-block" style="margin-top:.8rem;margin-bottom:0;font-size:.68rem">
+<span class="kw">import</span> hashlib
+seen = <span class="fn">set</span>()
+unique = []
+<span class="kw">for</span> d <span class="kw">in</span> docs:
+    h = hashlib.<span class="fn">md5</span>(d[<span class="str">"content"</span>].<span class="fn">encode</span>()).<span class="fn">hexdigest</span>()
+    <span class="kw">if</span> h <span class="kw">not in</span> seen:
+        seen.<span class="fn">add</span>(h); unique.<span class="fn">append</span>(d)
+          </div>
+        </div>
+        <div class="pp-dedup-card">
+          <div class="pp-dedup-method">MinHash / LSH</div>
+          <div class="pp-dedup-cost">⚖️ Balanced</div>
+          <p class="pp-dedup-desc">Locality-sensitive hashing of shingles (n-gram sequences). Catches near-duplicates with ~1% word changes. Scales to millions of docs.</p>
+          <div class="code-block" style="margin-top:.8rem;margin-bottom:0;font-size:.68rem">
+<span class="kw">from</span> datasketch <span class="kw">import</span> <span class="cls">MinHash</span>, <span class="cls">MinHashLSH</span>
+lsh = <span class="cls">MinHashLSH</span>(threshold=<span class="num">0.85</span>, num_perm=<span class="num">128</span>)
+<span class="kw">for</span> i, d <span class="kw">in</span> <span class="fn">enumerate</span>(docs):
+    m = <span class="cls">MinHash</span>(num_perm=<span class="num">128</span>)
+    <span class="kw">for</span> shingle <span class="kw">in</span> <span class="fn">get_shingles</span>(d[<span class="str">"content"</span>]):
+        m.<span class="fn">update</span>(shingle.<span class="fn">encode</span>())
+    <span class="kw">if not</span> lsh.<span class="fn">query</span>(m):
+        lsh.<span class="fn">insert</span>(<span class="fn">f</span><span class="str">"d{i}"</span>, m)
+          </div>
+        </div>
+        <div class="pp-dedup-card">
+          <div class="pp-dedup-method">Semantic Sim.</div>
+          <div class="pp-dedup-cost">💰 Most thorough</div>
+          <p class="pp-dedup-desc">Embed all docs, cluster by cosine similarity > 0.95. Finds paraphrased duplicates. Best quality, but needs embedding cost upfront.</p>
+          <div class="code-block" style="margin-top:.8rem;margin-bottom:0;font-size:.68rem">
+<span class="kw">from</span> sklearn.metrics.pairwise <span class="kw">import</span> cosine_similarity
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+embs = np.<span class="fn">array</span>(embeddings)
+sim  = <span class="fn">cosine_similarity</span>(embs)
+<span class="cm"># Keep only docs where no prior doc has sim > 0.95</span>
+keep = []
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(docs)):
+    <span class="kw">if</span> <span class="fn">all</span>(sim[i][j] &lt; <span class="num">0.95</span> <span class="kw">for</span> j <span class="kw">in</span> keep):
+        keep.<span class="fn">append</span>(i)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pp-detail-panel" id="pp-metadata">
+      <div class="pp-detail-header">
+        <span class="pp-detail-icon">🏷</span>
+        <div>
+          <div class="pp-detail-title">Stage 5 — Metadata Enrichment &amp; Classification</div>
+          <div class="pp-detail-sub">Add structured attributes that power filtered retrieval and citations</div>
+        </div>
+      </div>
+      <p class="pp-body-text" style="margin-bottom:1.2rem">Metadata is the secret weapon of production RAG. Without it, every query searches everything. With good metadata you can scope searches to a department, date range, document type, or security tier — without re-embedding.</p>
+
+      <div class="pp-meta-grid">
+        <div class="pp-meta-category">
+          <div class="pp-meta-cat-header" style="color:var(--orange)">📄 Source Fields</div>
+          <div class="pp-meta-field"><code class="inline-code">source</code> — filename or URL</div>
+          <div class="pp-meta-field"><code class="inline-code">page</code> — page / section number</div>
+          <div class="pp-meta-field"><code class="inline-code">created_at</code> — file creation date</div>
+          <div class="pp-meta-field"><code class="inline-code">last_modified</code> — last edit timestamp</div>
+          <div class="pp-meta-field"><code class="inline-code">author</code> — document owner</div>
+        </div>
+        <div class="pp-meta-category">
+          <div class="pp-meta-cat-header" style="color:var(--teal)">🏢 Org Fields</div>
+          <div class="pp-meta-field"><code class="inline-code">department</code> — HR, Engineering, Legal…</div>
+          <div class="pp-meta-field"><code class="inline-code">doc_type</code> — policy, runbook, FAQ…</div>
+          <div class="pp-meta-field"><code class="inline-code">classification</code> — public / internal / confidential</div>
+          <div class="pp-meta-field"><code class="inline-code">language</code> — en, hi, de… (for multilingual)</div>
+          <div class="pp-meta-field"><code class="inline-code">version</code> — v1.2, Q3-2024…</div>
+        </div>
+        <div class="pp-meta-category">
+          <div class="pp-meta-cat-header" style="color:var(--purple)">🤖 Auto-generated</div>
+          <div class="pp-meta-field"><code class="inline-code">summary</code> — LLM-generated 1-liner</div>
+          <div class="pp-meta-field"><code class="inline-code">keywords</code> — extracted key terms</div>
+          <div class="pp-meta-field"><code class="inline-code">entities</code> — named persons, orgs, dates</div>
+          <div class="pp-meta-field"><code class="inline-code">topic_cluster</code> — k-means cluster ID</div>
+          <div class="pp-meta-field"><code class="inline-code">quality_score</code> — readability / density</div>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <span class="cb-label">Python · Metadata Enrichment</span>
+<span class="kw">import</span> os
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+
+<span class="kw">def</span> <span class="fn">enrich_metadata</span>(doc: <span class="cls">dict</span>, file_path: <span class="cls">str</span>) -> <span class="cls">dict</span>:
+    stat = os.<span class="fn">stat</span>(file_path)
+    doc[<span class="str">"metadata"</span>].<span class="fn">update</span>({
+        <span class="cm"># Source provenance</span>
+        <span class="str">"source"</span>:        os.path.<span class="fn">basename</span>(file_path),
+        <span class="str">"created_at"</span>:    datetime.<span class="fn">fromtimestamp</span>(stat.st_ctime).<span class="fn">isoformat</span>(),
+        <span class="str">"last_modified"</span>: datetime.<span class="fn">fromtimestamp</span>(stat.st_mtime).<span class="fn">isoformat</span>(),
+        <span class="str">"file_size_kb"</span>:  stat.st_size // <span class="num">1024</span>,
+
+        <span class="cm"># Org classification (rule-based)</span>
+        <span class="str">"department"</span>: <span class="fn">classify_department</span>(file_path),
+        <span class="str">"doc_type"</span>:   <span class="fn">classify_doc_type</span>(doc[<span class="str">"content"</span>]),
+        <span class="str">"language"</span>:   <span class="fn">detect_language</span>(doc[<span class="str">"content"</span>]),
+
+        <span class="cm"># Quality signals</span>
+        <span class="str">"word_count"</span>:     <span class="fn">len</span>(doc[<span class="str">"content"</span>].<span class="fn">split</span>()),
+        <span class="str">"quality_score"</span>:  <span class="fn">compute_quality</span>(doc[<span class="str">"content"</span>]),
+    })
+    <span class="kw">return</span> doc
+
+<span class="kw">def</span> <span class="fn">classify_department</span>(path: <span class="cls">str</span>) -> <span class="cls">str</span>:
+    path_lower = path.<span class="fn">lower</span>()
+    <span class="kw">if</span> <span class="str">"hr"</span> <span class="kw">in</span> path_lower <span class="kw">or</span> <span class="str">"policy"</span> <span class="kw">in</span> path_lower: <span class="kw">return</span> <span class="str">"HR"</span>
+    <span class="kw">if</span> <span class="str">"eng"</span> <span class="kw">in</span> path_lower <span class="kw">or</span> <span class="str">"tech"</span> <span class="kw">in</span> path_lower:  <span class="kw">return</span> <span class="str">"Engineering"</span>
+    <span class="kw">if</span> <span class="str">"legal"</span> <span class="kw">in</span> path_lower <span class="kw">or</span> <span class="str">"contract"</span> <span class="kw">in</span> path_lower: <span class="kw">return</span> <span class="str">"Legal"</span>
+    <span class="kw">return</span> <span class="str">"General"</span>
+      </div>
+
+      <!-- Metadata filter demo -->
+      <div class="section-title" style="font-size:.95rem;margin-top:1.5rem">Interactive — Metadata Filtering at Query Time</div>
+      <div class="pp-filter-demo">
+        <div class="pp-filter-row">
+          <div class="pp-filter-group">
+            <label class="pp-filter-label">Department</label>
+            <select class="pp-filter-select" id="filterDept" onchange="runMetaFilter()">
+              <option value="">All</option>
+              <option value="HR">HR</option>
+              <option value="Engineering">Engineering</option>
+              <option value="Legal">Legal</option>
+            </select>
+          </div>
+          <div class="pp-filter-group">
+            <label class="pp-filter-label">Doc Type</label>
+            <select class="pp-filter-select" id="filterType" onchange="runMetaFilter()">
+              <option value="">All</option>
+              <option value="policy">Policy</option>
+              <option value="runbook">Runbook</option>
+              <option value="faq">FAQ</option>
+            </select>
+          </div>
+          <div class="pp-filter-group">
+            <label class="pp-filter-label">Min Quality</label>
+            <select class="pp-filter-select" id="filterQuality" onchange="runMetaFilter()">
+              <option value="0">Any</option>
+              <option value="0.6">Good (0.6+)</option>
+              <option value="0.8">High (0.8+)</option>
+            </select>
+          </div>
+        </div>
+        <div class="pp-filter-results" id="ppFilterResults"></div>
+      </div>
+    </div>
+
+    <div class="pp-detail-panel" id="pp-quality">
+      <div class="pp-detail-header">
+        <span class="pp-detail-icon">✅</span>
+        <div>
+          <div class="pp-detail-title">Stage 6 — Quality Gate &amp; Validation</div>
+          <div class="pp-detail-sub">Catch bad documents before they pollute your vector store</div>
+        </div>
+      </div>
+      <p class="pp-body-text" style="margin-bottom:1.2rem">Every preprocessing pipeline needs a quality gate. Documents that pass extraction but are still too short, too noisy, or in the wrong language should be quarantined and logged — not silently embedded and stored.</p>
+
+      <div class="pp-quality-checks">
+        <div class="pp-qcheck green">
+          <div class="pp-qcheck-icon">✓</div>
+          <div>
+            <div class="pp-qcheck-title">Minimum word count</div>
+            <div class="pp-qcheck-desc">Drop docs with fewer than 20 words — usually extraction failures or nav fragments</div>
+          </div>
+        </div>
+        <div class="pp-qcheck green">
+          <div class="pp-qcheck-icon">✓</div>
+          <div>
+            <div class="pp-qcheck-title">Language detection</div>
+            <div class="pp-qcheck-desc">Ensure content matches expected language; route multilingual docs to the right embedding model</div>
+          </div>
+        </div>
+        <div class="pp-qcheck green">
+          <div class="pp-qcheck-icon">✓</div>
+          <div>
+            <div class="pp-qcheck-title">Encoding verification</div>
+            <div class="pp-qcheck-desc">Check for replacement characters (â€™) from mojibake — signs of double-encoding bugs</div>
+          </div>
+        </div>
+        <div class="pp-qcheck green">
+          <div class="pp-qcheck-icon">✓</div>
+          <div>
+            <div class="pp-qcheck-title">Non-text ratio</div>
+            <div class="pp-qcheck-desc">If >30% of characters are non-ASCII or special symbols, it's likely an extraction failure</div>
+          </div>
+        </div>
+        <div class="pp-qcheck orange">
+          <div class="pp-qcheck-icon">⚠</div>
+          <div>
+            <div class="pp-qcheck-title">Log &amp; quarantine, don't silently drop</div>
+            <div class="pp-qcheck-desc">Keep a rejected_docs.jsonl log. Your team will thank you when debugging retrieval misses</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <span class="cb-label">Python · Quality Gate</span>
+<span class="kw">import</span> json, logging
+<span class="kw">from</span> langdetect <span class="kw">import</span> <span class="fn">detect</span>
+
+<span class="kw">def</span> <span class="fn">quality_gate</span>(docs: <span class="cls">list</span>, expected_lang=<span class="str">"en"</span>) -> <span class="cls">tuple</span>:
+    accepted, rejected = [], []
+
+    <span class="kw">for</span> doc <span class="kw">in</span> docs:
+        text = doc[<span class="str">"content"</span>]
+        words = text.<span class="fn">split</span>()
+        reasons = []
+
+        <span class="cm"># Rule 1: minimum length</span>
+        <span class="kw">if</span> <span class="fn">len</span>(words) &lt; <span class="num">20</span>:
+            reasons.<span class="fn">append</span>(<span class="str">"too_short"</span>)
+
+        <span class="cm"># Rule 2: non-text ratio</span>
+        non_alpha = <span class="fn">sum</span>(<span class="num">1</span> <span class="kw">for</span> c <span class="kw">in</span> text <span class="kw">if not</span> c.<span class="fn">isalpha</span>() <span class="kw">and not</span> c.<span class="fn">isspace</span>())
+        <span class="kw">if</span> non_alpha / <span class="fn">max</span>(<span class="fn">len</span>(text), <span class="num">1</span>) &gt; <span class="num">0.3</span>:
+            reasons.<span class="fn">append</span>(<span class="str">"high_noise"</span>)
+
+        <span class="cm"># Rule 3: language check</span>
+        <span class="kw">try</span>:
+            lang = <span class="fn">detect</span>(text[:<span class="num">400</span>])
+            <span class="kw">if</span> lang != expected_lang:
+                reasons.<span class="fn">append</span>(<span class="fn">f</span><span class="str">"wrong_lang:{lang}"</span>)
+        <span class="kw">except</span>: <span class="kw">pass</span>
+
+        (rejected <span class="kw">if</span> reasons <span class="kw">else</span> accepted).<span class="fn">append</span>(
+            {**doc, <span class="str">"reject_reasons"</span>: reasons} <span class="kw">if</span> reasons <span class="kw">else</span> doc
+        )
+
+    <span class="cm"># Log rejections for audit</span>
+    <span class="kw">with</span> <span class="fn">open</span>(<span class="str">"rejected_docs.jsonl"</span>, <span class="str">"a"</span>) <span class="kw">as</span> f:
+        <span class="kw">for</span> d <span class="kw">in</span> rejected:
+            f.<span class="fn">write</span>(json.<span class="fn">dumps</span>(d) + <span class="str">"\n"</span>)
+
+    logging.<span class="fn">info</span>(<span class="fn">f</span><span class="str">"Quality gate: {len(accepted)} passed, {len(rejected)} rejected"</span>)
+    <span class="kw">return</span> accepted, rejected
+      </div>
+
+      <!-- Stats bar -->
+      <div class="pp-stats-row">
+        <div class="pp-stat"><div class="pp-stat-val" style="color:var(--green)">847</div><div class="pp-stat-label">Docs passed</div></div>
+        <div class="pp-stat"><div class="pp-stat-val" style="color:var(--red)">23</div><div class="pp-stat-label">Rejected</div></div>
+        <div class="pp-stat"><div class="pp-stat-val" style="color:var(--orange)">12</div><div class="pp-stat-label">Too short</div></div>
+        <div class="pp-stat"><div class="pp-stat-val" style="color:var(--purple)">8</div><div class="pp-stat-label">Wrong lang</div></div>
+        <div class="pp-stat"><div class="pp-stat-val" style="color:var(--teal)">3</div><div class="pp-stat-label">High noise</div></div>
+      </div>
+    </div>
+
+    <!-- Summary accordion -->
+    <div class="acc" style="margin-top:2rem">
+      <div class="acc-header" onclick="toggleAcc(this)">🔑 Preprocessing checklist — copy this for your team <span class="acc-icon">▼</span></div>
+      <div class="acc-body">
+        <strong>Before embedding any document, verify:</strong><br><br>
+        ☐ Text extraction complete — no empty page_content fields<br>
+        ☐ Unicode normalized (NFKC) — no curly quotes or special spaces<br>
+        ☐ Boilerplate removed — page numbers, headers, footers, copyright<br>
+        ☐ Whitespace collapsed — no double spaces or 3+ newlines<br>
+        ☐ HTML entities decoded — &amp;amp; &amp;nbsp; etc.<br>
+        ☐ Exact duplicates removed (hash check)<br>
+        ☐ Near-duplicates removed (MinHash or semantic sim &gt; 0.95)<br>
+        ☐ Metadata enriched — source, page, department, doc_type, created_at<br>
+        ☐ Language detected and routed<br>
+        ☐ Quality gate run — rejected_docs.jsonl saved<br>
+        ☐ Word count distribution checked — histogram, not just average
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1595,6 +2587,7 @@ function goTo(id) {
   if (id === 'embeddings') initScatter();
   if (id === 'retrieval') { drawCosine(0.72); initRetrieval(); }
   if (id === 'vectorstore') initVectorGrid();
+  syncNaiveRag(id);
 }
 
 document.querySelectorAll('.nav-link').forEach(l => {
@@ -1998,6 +2991,110 @@ function buildPrompt() {
     }
   }
 }
+
+// ─────────────────────────────────────────
+// Naive RAG Pipeline (Home) — click + sync progress
+// ─────────────────────────────────────────
+function naiveStepClick(card) {
+  const idx = parseInt(card.dataset.index, 10);
+  const cards = Array.from(document.querySelectorAll('.naive-step-card'));
+  cards.forEach(c => {
+    const cidx = parseInt(c.dataset.index, 10);
+    c.classList.toggle('current', cidx === idx);
+    c.classList.toggle('done', cidx < idx);
+  });
+  goTo(card.dataset.page);
+}
+
+function syncNaiveRag(pageId) {
+  const map = {
+    loading: 0,
+    preprocessing: 1,
+    chunking: 2,
+    embeddings: 3,
+    vectorstore: 4,
+    retrieval: 5,
+    generation: 6
+  };
+  const idx = map[pageId];
+  if (idx === undefined) return;
+
+  const cards = Array.from(document.querySelectorAll('.naive-step-card'));
+  cards.forEach(c => {
+    const cidx = parseInt(c.dataset.index, 10);
+    c.classList.toggle('current', cidx === idx);
+    c.classList.toggle('done', cidx < idx);
+  });
+}
+
+// Initial sync based on the current nav state.
+syncNaiveRag(document.querySelector('.nav-link.active')?.dataset.page || 'home');
 </script>
 </body>
 </html>
+<script>
+// ─────────────────────────────────────────
+// PREPROCESSING — Stage selector
+// ─────────────────────────────────────────
+function selectPPStage(el) {
+  document.querySelectorAll('.pp-stage').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  const target = el.dataset.target;
+  document.querySelectorAll('.pp-detail-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById(target);
+  if (panel) { panel.classList.add('active'); panel.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
+  if (target === 'pp-metadata') setTimeout(runMetaFilter, 100);
+}
+
+// ─────────────────────────────────────────
+// PREPROCESSING — Before/After normalize demo
+// ─────────────────────────────────────────
+function runNormalize() {
+  const raw = document.getElementById('ppRawText').textContent;
+  let clean = raw;
+  clean = clean.replace(/Page \d+ of \d+/g, '');
+  clean = clean.replace(/EMPLOYEE\s+HANDBOOK\s+[—-]\s+CONFIDENTIAL/gi, '');
+  clean = clean.replace(/\n{3,}/g, '\n\n');
+  clean = clean.replace(/  +/g, ' ');
+  clean = clean.replace(/\u201c|\u201d/g, '"');
+  clean = clean.replace(/\u00a0/g, ' ');
+  clean = clean.trim();
+  const cleanEl = document.getElementById('ppCleanText');
+  cleanEl.style.color = 'var(--text)';
+  cleanEl.textContent = clean;
+  document.getElementById('ppChangesLog').style.display = 'flex';
+  const btn = document.querySelector('.pp-clean-btn');
+  if (btn) { btn.textContent = '✅ Cleaned!'; btn.style.background = 'var(--green)'; }
+}
+
+// ─────────────────────────────────────────
+// PREPROCESSING — Metadata filter demo
+// ─────────────────────────────────────────
+const META_DOCS = [
+  { name:'hr_leave_policy_2024.pdf',    dept:'HR',          type:'policy',  quality:0.91, tags:['HR','policy','2024'] },
+  { name:'hr_onboarding_guide.pdf',     dept:'HR',          type:'runbook', quality:0.84, tags:['HR','runbook'] },
+  { name:'engineering_deployment.md',   dept:'Engineering', type:'runbook', quality:0.88, tags:['Eng','runbook'] },
+  { name:'api_reference_v3.md',         dept:'Engineering', type:'faq',     quality:0.76, tags:['Eng','faq'] },
+  { name:'contract_template_2024.docx', dept:'Legal',       type:'policy',  quality:0.93, tags:['Legal','policy'] },
+  { name:'benefits_faq_2024.pdf',       dept:'HR',          type:'faq',     quality:0.79, tags:['HR','faq'] },
+  { name:'infra_runbook_k8s.md',        dept:'Engineering', type:'runbook', quality:0.82, tags:['Eng','runbook'] },
+];
+const TAG_COLORS = { HR:'#f97316', Eng:'#14b8a6', Legal:'#a855f7', policy:'#3b82f6', runbook:'#22c55e', faq:'#eab308', '2024':'#888' };
+
+function runMetaFilter() {
+  const dept    = document.getElementById('filterDept')?.value || '';
+  const type    = document.getElementById('filterType')?.value || '';
+  const quality = parseFloat(document.getElementById('filterQuality')?.value || '0');
+  const container = document.getElementById('ppFilterResults');
+  if (!container) return;
+  const filtered = META_DOCS.filter(d => (!dept || d.dept === dept) && (!type || d.type === type) && (d.quality >= quality));
+  if (!filtered.length) { container.innerHTML = '<div class="pp-filter-empty">No documents match filters</div>'; return; }
+  container.innerHTML = '';
+  filtered.forEach(d => {
+    const div = document.createElement('div');
+    div.className = 'pp-filter-doc';
+    div.innerHTML = `<div class="pp-filter-doc-name">📄 ${d.name}</div><div class="pp-filter-tags">${d.tags.map(t=>`<div class="pp-filter-tag" style="color:${TAG_COLORS[t]||'#888'};border-color:${TAG_COLORS[t]||'#888'};background:${TAG_COLORS[t]||'#888'}22">${t}</div>`).join('')}</div><div class="pp-filter-qs">quality: ${d.quality.toFixed(2)}</div>`;
+    container.appendChild(div);
+  });
+}
+</script>
